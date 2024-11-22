@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DerikChat</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f4f7fa;
+            color: #333;
+            margin: 0;
+            padding: 40px 20px;
+            text-align: center;
+        }
+        h1 {
+            color: #2c3e50;
+            font-size: 3rem;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+        h2 {
+            color: #34495e;
+            font-size: 2rem;
+            margin-top: 40px;
+        }
+        hr {
+            margin: 40px 0;
+            border: 1px solid #ddd;
+        }
+        .message-container {
+            max-width: 800px;
+            margin: 0 auto;
+            text-align: left;
+        }
+        .message-box {
+            background-color: #fff;
+            border-left: 5px solid #3498db;
+            padding: 10px 15px;
+            margin-bottom: 15px;
+            border-radius: 8px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            font-size: 1rem;
+            transition: box-shadow 0.3s ease;
+            max-width: 90%;
+            margin-left: auto;
+            margin-right: auto;
+            min-height: 50px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        .message-box:hover {
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.15);
+        }
+        form {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        textarea {
+            width: 100%;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+            font-size: 1rem;
+            margin-bottom: 15px;
+            outline: none;
+            resize: none;
+            transition: border 0.3s ease;
+        }
+        textarea:focus {
+            border-color: #3498db;
+        }
+        button {
+            padding: 15px 25px;
+            background-color: #3498db;
+            color: white;
+            font-size: 1.2rem;
+            font-weight: bold;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        button:hover {
+            background-color: #2980b9;
+        }
+        .admin-form {
+            margin-top: 50px;
+            padding: 20px;
+            background-color: #ecf0f1;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        .admin-form h3 {
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            color: #e74c3c;
+        }
+        .admin-form input {
+            padding: 12px;
+            font-size: 1rem;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+            margin-right: 15px;
+            width: 250px;
+            transition: border 0.3s ease;
+        }
+        .admin-form input:focus {
+            border-color: #e74c3c;
+        }
+        .admin-form button {
+            padding: 12px 25px;
+            background-color: #e74c3c;
+            color: white;
+            font-size: 1rem;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        .admin-form button:hover {
+            background-color: #c0392b;
+        }
+        .error-message {
+            color: red;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2rem;
+            }
+            textarea {
+                font-size: 0.9rem;
+            }
+            button {
+                font-size: 1rem;
+                padding: 12px 20px;
+            }
+            .admin-form input,
+            .admin-form button {
+                width: 100%;
+                margin: 10px 0;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <h1>DerikChat</h1>
+
+    <form method="POST">
+        <textarea name="message" placeholder="Write your message here..." required></textarea><br>
+        <button type="submit">Post Message</button>
+    </form>
+
+    <hr>
+
+    <h2>Messages:</h2>
+    <div class="message-container">
+        {% for message in messages %}
+            <div class="message-box">
+                {{ message }}
+            </div>
+        {% endfor %}
+    </div>
+
+    <div class="admin-form">
+        <h3>Admin - Clear All Messages</h3>
+        <form method="POST" action="{{ url_for('home') }}">
+            <input type="password" name="clear_password" placeholder="Enter admin password" required>
+            <button type="submit">Clear All Messages</button>
+        </form>
+        {% if error_message %}
+            <div class="error-message">
+                {{ error_message }}
+            </div>
+        {% endif %}
+    </div>
+
+</body>
+</html>
