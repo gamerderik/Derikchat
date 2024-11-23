@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register - DerikChat</title>
+    <link rel="stylesheet" href="static/style.css"> <!-- Link to the style.css file -->
+</head>
+<body>
+    <h1>DerikChat</h1>
+
+    <div class="auth-form">
+        <h2>Register</h2>
+        <form method="POST" action="{{ url_for('register') }}">
+    <input type="text" name="username" placeholder="Choose a username" required>
+    <input type="password" name="password" placeholder="Choose a password" required>
+    <button type="submit">Register</button>
+</form>
+        <p>Already have an account? <a href="{{ url_for('login') }}">Login here</a></p>
+    </div>
+</body>
+</html>
