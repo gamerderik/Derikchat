@@ -98,6 +98,7 @@ def home():
                 full_message = f"{username}: {message}"
                 messages.append(full_message)
                 save_message(full_message)
+                return redirect(url_for('home'))  # Redirect after processing the form
             else:
                 error_message = "Message cannot be blank."
 
@@ -112,6 +113,7 @@ def home():
         return render_template("index.html", messages=reversed(messages), error_message=error_message)
 
     return redirect(url_for('login'))
+
 
 @app.route("/register", methods=["GET", "POST"])
 def register():
