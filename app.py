@@ -1,52 +1,88 @@
 import os
+import dropbox
 from flask import Flask, request, render_template, redirect, url_for, session
 
+# Flask Setup
 app = Flask(__name__)
 
+# Dropbox Setup: Retrieve Dropbox access token from environment variables
+DROPBOX_ACCESS_TOKEN = os.getenv("DROPBOX_ACCESS_TOKEN")  # Use environment variable for Dropbox token
+dbx = dropbox.Dropbox(DROPBOX_ACCESS_TOKEN)
+
+# File names and paths
 FILE_NAME = "messages.txt"
 USERS_FILE = "users.txt"
-SECRET_KEY = "your-secret-key"  # Set a secret key for session management
+MESSAGES_PATH = "/messages.txt"
+USERS_PATH = "/users.txt"
+
+# Flask Secret Key: Retrieve from environment variable
+SECRET_KEY = os.getenv("FLASK_SECRET_KEY")  # Use environment variable for Flask secret key
+if not SECRET_KEY:
+    raise RuntimeError("FLASK_SECRET_KEY is not set in environment variables")
+
+app.secret_key = SECRET_KEY
+
+# Admin password for clearing messages
 ADMIN_PASSWORD = "Derik1408"
 
-# Load existing messages
+# Load messages from Dropbox
 def load_messages():
-    """Load messages from the file."""
+    """Load messages from Dropbox."""
+    download_from_dropbox(MESSAGES_PATH, FILE_NAME)
     if os.path.exists(FILE_NAME):
         with open(FILE_NAME, "r") as file:
             return file.read().splitlines()
     return []
 
-# Save a new message
+# Save a message to Dropbox
 def save_message(message):
-    """Save a new message to the file."""
+    """Save a new message to Dropbox."""
     with open(FILE_NAME, "a") as file:
         file.write(message + "\n")
+    upload_to_dropbox(FILE_NAME, MESSAGES_PATH)
 
-# Clear all messages
+# Clear messages from Dropbox
 def clear_messages():
-    """Clear all messages in the file and reset the global messages list."""
-    open(FILE_NAME, 'w').close()  # Clear the file content
+    """Clear all messages in Dropbox and reset the global messages list."""
+    open(FILE_NAME, 'w').close()  # Clear the file content locally
+    upload_to_dropbox(FILE_NAME, MESSAGES_PATH)  # Clear the file on Dropbox
     global messages
-    messages = []  # Clear the in-memory list of messages
+    messages = []
 
-# User registration and login handling
+# Load users from Dropbox
 def load_users():
-    """Load users from the file."""
+    """Load users from Dropbox."""
+    download_from_dropbox(USERS_PATH, USERS_FILE)
     if os.path.exists(USERS_FILE):
         with open(USERS_FILE, "r") as file:
             return [line.strip().split(":") for line in file.readlines()]
     return []
 
+# Save users to Dropbox
 def save_user(username, password):
-    """Save a new user to the users file."""
+    """Save a new user to Dropbox."""
     with open(USERS_FILE, "a") as file:
         file.write(f"{username}:{password}\n")
+    upload_to_dropbox(USERS_FILE, USERS_PATH)
 
-# Global variable for messages
+# Dropbox helper functions
+def upload_to_dropbox(local_path, dropbox_path):
+    """Upload a file to Dropbox."""
+    with open(local_path, "rb") as f:
+        dbx.files_upload(f.read(), dropbox_path, mode=dropbox.files.WriteMode.overwrite)
+
+def download_from_dropbox(dropbox_path, local_path):
+    """Download a file from Dropbox."""
+    try:
+        metadata, response = dbx.files_download(dropbox_path)
+        with open(local_path, "wb") as f:
+            f.write(response.content)
+    except dropbox.exceptions.ApiError:
+        # File not found, create an empty file
+        open(local_path, "w").close()
+
+# Global messages variable
 messages = load_messages()
-
-# Setup the Flask session
-app.secret_key = SECRET_KEY
 
 @app.route("/", methods=["GET", "POST"])
 def home():
