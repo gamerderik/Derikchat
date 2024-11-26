@@ -1,9 +1,13 @@
 import os
 import dropbox
 from flask import Flask, request, render_template, redirect, url_for, session
+from flask_caching import Cache
 
 # Flask Setup
 app = Flask(__name__)
+
+# Flask Caching Setup
+cache = Cache(app, config={'CACHE_TYPE': 'SimpleCache', 'CACHE_DEFAULT_TIMEOUT': 300})
 
 # Dropbox Setup: Retrieve Dropbox access token from environment variables
 DROPBOX_ACCESS_TOKEN = os.getenv("DROPBOX_ACCESS_TOKEN")  # Use environment variable for Dropbox token
@@ -25,7 +29,8 @@ app.secret_key = SECRET_KEY
 # Admin password for clearing messages
 ADMIN_PASSWORD = "Derik1408"
 
-# Load messages from Dropbox
+# Load messages from Dropbox with caching
+@cache.cached()
 def load_messages():
     """Load messages from Dropbox."""
     download_from_dropbox(MESSAGES_PATH, FILE_NAME)
@@ -34,22 +39,25 @@ def load_messages():
             return file.read().splitlines()
     return []
 
-# Save a message to Dropbox
+# Save a message to Dropbox and clear the cache
 def save_message(message):
     """Save a new message to Dropbox."""
     with open(FILE_NAME, "a") as file:
         file.write(message + "\n")
     upload_to_dropbox(FILE_NAME, MESSAGES_PATH)
+    cache.delete_memoized(load_messages)  # Clear cache for messages
 
-# Clear messages from Dropbox
+# Clear messages from Dropbox and reset the cache
 def clear_messages():
     """Clear all messages in Dropbox and reset the global messages list."""
     open(FILE_NAME, 'w').close()  # Clear the file content locally
     upload_to_dropbox(FILE_NAME, MESSAGES_PATH)  # Clear the file on Dropbox
+    cache.delete_memoized(load_messages)  # Clear cache for messages
     global messages
     messages = []
 
-# Load users from Dropbox
+# Load users from Dropbox with caching
+@cache.cached()
 def load_users():
     """Load users from Dropbox."""
     download_from_dropbox(USERS_PATH, USERS_FILE)
@@ -58,12 +66,13 @@ def load_users():
             return [line.strip().split(":") for line in file.readlines()]
     return []
 
-# Save users to Dropbox
+# Save users to Dropbox and clear the cache
 def save_user(username, password):
     """Save a new user to Dropbox."""
     with open(USERS_FILE, "a") as file:
         file.write(f"{username}:{password}\n")
     upload_to_dropbox(USERS_FILE, USERS_PATH)
+    cache.delete_memoized(load_users)  # Clear cache for users
 
 # Dropbox helper functions
 def upload_to_dropbox(local_path, dropbox_path):
@@ -81,7 +90,7 @@ def download_from_dropbox(dropbox_path, local_path):
         # File not found, create an empty file
         open(local_path, "w").close()
 
-# Global messages variable
+# Global messages variable (loaded from cache)
 messages = load_messages()
 
 @app.route("/", methods=["GET", "POST"])
@@ -113,7 +122,6 @@ def home():
         return render_template("index.html", messages=reversed(messages), error_message=error_message)
 
     return redirect(url_for('login'))
-
 
 @app.route("/register", methods=["GET", "POST"])
 def register():
