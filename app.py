@@ -1,7 +1,9 @@
 import os
-import dropbox
+import firebase_admin
+from firebase_admin import credentials, firestore
 from flask import Flask, request, render_template, redirect, url_for, session
 from flask_caching import Cache
+import json
 
 # Flask Setup
 app = Flask(__name__)
@@ -9,18 +11,16 @@ app = Flask(__name__)
 # Flask Caching Setup
 cache = Cache(app, config={'CACHE_TYPE': 'SimpleCache', 'CACHE_DEFAULT_TIMEOUT': 300})
 
-# Dropbox Setup: Retrieve Dropbox access token from environment variables
-DROPBOX_ACCESS_TOKEN = os.getenv("DROPBOX_ACCESS_TOKEN")  # Use environment variable for Dropbox token
-dbx = dropbox.Dropbox(DROPBOX_ACCESS_TOKEN)
+# Firebase Setup: Retrieve Firebase credentials from environment variables
+firebase_credentials = json.loads(os.getenv("FIREBASE_CREDENTIALS_JSON"))
+cred = credentials.Certificate(firebase_credentials)
+firebase_admin.initialize_app(cred)
 
-# File names and paths
-FILE_NAME = "messages.txt"
-USERS_FILE = "users.txt"
-MESSAGES_PATH = "/messages.txt"
-USERS_PATH = "/users.txt"
+# Firestore Client
+db = firestore.client()
 
 # Flask Secret Key: Retrieve from environment variable
-SECRET_KEY = os.getenv("FLASK_SECRET_KEY")  # Use environment variable for Flask secret key
+SECRET_KEY = os.getenv("FLASK_SECRET_KEY")
 if not SECRET_KEY:
     raise RuntimeError("FLASK_SECRET_KEY is not set in environment variables")
 
@@ -29,69 +29,44 @@ app.secret_key = SECRET_KEY
 # Admin password for clearing messages
 ADMIN_PASSWORD = "Derik1408"
 
-# Load messages from Dropbox with caching
+# Load messages from Firebase with caching
 @cache.cached()
 def load_messages():
-    """Load messages from Dropbox."""
-    download_from_dropbox(MESSAGES_PATH, FILE_NAME)
-    if os.path.exists(FILE_NAME):
-        with open(FILE_NAME, "r") as file:
-            return file.read().splitlines()
-    return []
+    """Load messages from Firebase Firestore."""
+    messages_ref = db.collection('messages')
+    docs = messages_ref.stream()
+    return [doc.to_dict()['message'] for doc in docs]
 
-# Save a message to Dropbox and clear the cache
+# Save a message to Firebase and clear the cache
 def save_message(message):
-    """Save a new message to Dropbox."""
-    with open(FILE_NAME, "a") as file:
-        file.write(message + "\n")
-    upload_to_dropbox(FILE_NAME, MESSAGES_PATH)
+    """Save a new message to Firebase Firestore."""
+    messages_ref = db.collection('messages')
+    messages_ref.add({'message': message})
     cache.delete_memoized(load_messages)  # Clear cache for messages
 
-# Clear messages from Dropbox and reset the cache
+# Clear messages from Firebase and reset the cache
 def clear_messages():
-    """Clear all messages in Dropbox and reset the global messages list."""
-    open(FILE_NAME, 'w').close()  # Clear the file content locally
-    upload_to_dropbox(FILE_NAME, MESSAGES_PATH)  # Clear the file on Dropbox
+    """Clear all messages in Firebase Firestore and reset the global messages list."""
+    messages_ref = db.collection('messages')
+    docs = messages_ref.stream()
+    for doc in docs:
+        doc.reference.delete()
     cache.delete_memoized(load_messages)  # Clear cache for messages
-    global messages
-    messages = []
 
-# Load users from Dropbox with caching
+# Load users from Firebase with caching
 @cache.cached()
 def load_users():
-    """Load users from Dropbox."""
-    download_from_dropbox(USERS_PATH, USERS_FILE)
-    if os.path.exists(USERS_FILE):
-        with open(USERS_FILE, "r") as file:
-            return [line.strip().split(":") for line in file.readlines()]
-    return []
+    """Load users from Firebase Firestore."""
+    users_ref = db.collection('users')
+    docs = users_ref.stream()
+    return [(doc.to_dict()['username'], doc.to_dict()['password']) for doc in docs]
 
-# Save users to Dropbox and clear the cache
+# Save users to Firebase and clear the cache
 def save_user(username, password):
-    """Save a new user to Dropbox."""
-    with open(USERS_FILE, "a") as file:
-        file.write(f"{username}:{password}\n")
-    upload_to_dropbox(USERS_FILE, USERS_PATH)
+    """Save a new user to Firebase Firestore."""
+    users_ref = db.collection('users')
+    users_ref.add({'username': username, 'password': password})
     cache.delete_memoized(load_users)  # Clear cache for users
-
-# Dropbox helper functions
-def upload_to_dropbox(local_path, dropbox_path):
-    """Upload a file to Dropbox."""
-    with open(local_path, "rb") as f:
-        dbx.files_upload(f.read(), dropbox_path, mode=dropbox.files.WriteMode.overwrite)
-
-def download_from_dropbox(dropbox_path, local_path):
-    """Download a file from Dropbox."""
-    try:
-        metadata, response = dbx.files_download(dropbox_path)
-        with open(local_path, "wb") as f:
-            f.write(response.content)
-    except dropbox.exceptions.ApiError:
-        # File not found, create an empty file
-        open(local_path, "w").close()
-
-# Global messages variable (loaded from cache)
-messages = load_messages()
 
 @app.route("/", methods=["GET", "POST"])
 def home():
