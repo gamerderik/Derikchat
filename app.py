@@ -15,7 +15,7 @@ ADMIN_PASSWORD = "Derik1408"
 firebase_credentials = os.getenv("FIREBASE_CREDENTIALS")  # Get Firebase credentials from environment
 cred = credentials.Certificate(json.loads(firebase_credentials))  # Parse JSON string
 firebase_admin.initialize_app(cred, {
-    'databaseURL': 'https://your-database-name.firebaseio.com/'  # Replace with your Firebase DB URL
+    'databaseURL': 'https://derikchat-1408-default-rtdb.firebaseio.com/'  # Replace with your Firebase DB URL
 })
 
 
