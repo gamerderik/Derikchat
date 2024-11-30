@@ -18,9 +18,6 @@ firebase_admin.initialize_app(cred, {
     'databaseURL': 'https://your-database-name.firebaseio.com/'  # Replace with your Firebase DB URL
 })
 
-# Setup the Flask session
-app.secret_key = SECRET_KEY
-
 
 # Firebase Helper Functions
 def save_message_to_firebase(username, message):
