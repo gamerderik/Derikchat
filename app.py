@@ -26,7 +26,7 @@ def save_message_to_firebase(username, message):
     ref.push({
         "username": username,
         "message": message,
-        "timestamp": db.ServerValue.TIMESTAMP
+        "timestamp": db.server_timestamp() 
     })
 
 
