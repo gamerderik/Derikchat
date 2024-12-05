@@ -4,6 +4,7 @@ from flask import Flask, request, render_template, redirect, url_for, session
 import firebase_admin
 from firebase_admin import credentials, db
 from werkzeug.security import generate_password_hash, check_password_hash
+from datetime import datetime
 
 app = Flask(__name__)
 
@@ -37,12 +38,15 @@ def load_messages_from_firebase():
     return [(msg["username"], msg["message"]) for msg in messages.values()] if messages else []
 
 
-def save_user_to_firebase(username, password):
-    """Save a new user to Firebase."""
-    ref = db.reference("users")
-    ref.child(username).set({
-        "password": generate_password_hash(password)
+def save_message_to_firebase(username, message):
+    """Save a new message to Firebase."""
+    ref = db.reference("messages")
+    ref.push({
+        "username": username,
+        "message": message,
+        "timestamp": datetime.now().isoformat()  # ISO 8601 format for consistency
     })
+
 
 
 def authenticate_user(username, password):
