@@ -38,6 +38,16 @@ def load_messages_from_firebase():
     return [(msg["username"], msg["message"]) for msg in messages.values()] if messages else []
 
 
+def save_user_to_firebase(username, password):
+    """Save a new user to Firebase."""
+    ref = db.reference("users")
+    ref.child(username).set({
+        "username": username,
+        "password": generate_password_hash(password)
+    })
+
+
+
 def authenticate_user(username, password):
     """Authenticate a user using Firebase."""
     ref = db.reference("users")
