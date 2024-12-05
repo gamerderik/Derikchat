@@ -107,25 +107,41 @@ def register():
     return render_template("register.html", error_message=error_message)
 
 
-@app.route("/login", methods=["GET", "POST"])
-def login():
-    error_message = None
+@app.route("/", methods=["GET", "POST"])
+def home():
+    error_message = None  # Initialize error message
 
-    if request.method == "POST":
-        username = request.form.get("username").strip()  # Remove leading/trailing spaces
-        password = request.form.get("password").strip()  # Remove leading/trailing spaces
-
-        if username and password:
-            if authenticate_user(username, password):
-                session['username'] = username
-                return redirect(url_for('home'))
+    if 'username' in session:
+        # User is logged in, show the chat
+        if request.method == "POST":
+            message = request.form.get("message")
+            if message and message.strip():
+                username = session['username']
+                save_message_to_firebase(username, message)
             else:
-                error_message = "Invalid username or password."
-        else:
-            error_message = "Both fields are required."
+                error_message = "Message cannot be blank."
 
-    return render_template("login.html", error_message=error_message)
+            clear_password = request.form.get("clear_password")
+            if clear_password:
+                if clear_password == ADMIN_PASSWORD:
+                    db.reference("messages").delete()  # Clear all messages in Firebase
+                    return redirect(url_for('home'))
+                else:
+                    error_message = "Incorrect password. Access denied."
 
+        messages = load_messages_from_firebase()
+
+        # Preprocess messages to preserve paragraphs
+        processed_messages = []
+        for username, message in messages:
+            # Wrap each message with <p> tags, replacing double newlines with paragraph breaks
+            message = message.replace('\n\n', '</p><p>')  # Replace double newlines with <p> tags
+            message = f'<p>{message}</p>'  # Wrap the entire message in <p> tags
+            processed_messages.append((username, message))
+
+        return render_template("index.html", messages=reversed(processed_messages), error_message=error_message)
+
+    return redirect(url_for('login'))
 
 @app.route("/logout")
 def logout():
