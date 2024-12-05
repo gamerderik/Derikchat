@@ -30,8 +30,8 @@
     <div class="message-container">
         {% for message in messages %}
         <div class="message-box">
-            <!-- Replace newlines with <br> to display properly -->
-            {{ message[1] | e | replace('\n', '<br>') | safe }}
+            <!-- Replace double newlines with <p> tags to preserve paragraphs -->
+            {{ message[1] | e | replace('\n\n', '</p><p>') | prepend('<p>') | append('</p>') | safe }}
         </div>
         {% endfor %}
     </div>
