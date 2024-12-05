@@ -30,8 +30,8 @@
     <div class="message-container">
         {% for message in messages %}
         <div class="message-box">
-            <!-- Safe rendering of the processed message -->
-            {{ message[1] | safe }}
+            <strong>{{ message[0] }}:</strong> <!-- Display username -->
+            {{ message[1] | nl2br }} <!-- Display message with preserved formatting -->
         </div>
         {% endfor %}
     </div>
