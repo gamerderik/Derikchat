@@ -30,11 +30,12 @@
     <div class="message-container">
         {% for message in messages %}
         <div class="message-box">
-            <strong>{{ message[0] }}:</strong> <!-- Display username -->
-            {{ message[1] | nl2br }} <!-- Display message with preserved formatting -->
-        </div>
+    <strong>{{ message[0] }}:</strong> <!-- Display username -->
+    {{ message[1] | nl2br }} <!-- Use custom nl2br filter to preserve line breaks -->
+</div>
         {% endfor %}
     </div>
+
 
     <div class="admin-form">
         <h3>Admin - Clear All Messages</h3>
