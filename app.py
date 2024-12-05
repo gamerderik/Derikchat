@@ -27,7 +27,7 @@ def save_message_to_firebase(username, message):
     ref.push({
         "username": username,
         "message": message,
-        "timestamp": db.ServerValue.TIMESTAMP
+        "timestamp": datetime.now().isoformat()  # ISO 8601 format for consistency
     })
 
 
@@ -36,16 +36,6 @@ def load_messages_from_firebase():
     ref = db.reference("messages")
     messages = ref.order_by_child("timestamp").get()
     return [(msg["username"], msg["message"]) for msg in messages.values()] if messages else []
-
-
-def save_message_to_firebase(username, message):
-    """Save a new message to Firebase."""
-    ref = db.reference("messages")
-    ref.push({
-        "username": username,
-        "message": message,
-        "timestamp": datetime.now().isoformat()  # ISO 8601 format for consistency
-    })
 
 
 def authenticate_user(username, password):
@@ -81,7 +71,16 @@ def home():
                     error_message = "Incorrect password. Access denied."
 
         messages = load_messages_from_firebase()
-        return render_template("index.html", messages=reversed(messages), error_message=error_message)
+
+        # Preprocess messages to preserve paragraphs
+        processed_messages = []
+        for username, message in messages:
+            # Wrap each message with <p> tags, replacing double newlines with paragraph breaks
+            message = message.replace('\n\n', '</p><p>')  # Replace double newlines with <p> tags
+            message = f'<p>{message}</p>'  # Wrap the entire message in <p> tags
+            processed_messages.append((username, message))
+
+        return render_template("index.html", messages=reversed(processed_messages), error_message=error_message)
 
     return redirect(url_for('login'))
 
@@ -106,42 +105,6 @@ def register():
 
     return render_template("register.html", error_message=error_message)
 
-
-@app.route("/", methods=["GET", "POST"])
-def home():
-    error_message = None  # Initialize error message
-
-    if 'username' in session:
-        # User is logged in, show the chat
-        if request.method == "POST":
-            message = request.form.get("message")
-            if message and message.strip():
-                username = session['username']
-                save_message_to_firebase(username, message)
-            else:
-                error_message = "Message cannot be blank."
-
-            clear_password = request.form.get("clear_password")
-            if clear_password:
-                if clear_password == ADMIN_PASSWORD:
-                    db.reference("messages").delete()  # Clear all messages in Firebase
-                    return redirect(url_for('home'))
-                else:
-                    error_message = "Incorrect password. Access denied."
-
-        messages = load_messages_from_firebase()
-
-        # Preprocess messages to preserve paragraphs
-        processed_messages = []
-        for username, message in messages:
-            # Wrap each message with <p> tags, replacing double newlines with paragraph breaks
-            message = message.replace('\n\n', '</p><p>')  # Replace double newlines with <p> tags
-            message = f'<p>{message}</p>'  # Wrap the entire message in <p> tags
-            processed_messages.append((username, message))
-
-        return render_template("index.html", messages=reversed(processed_messages), error_message=error_message)
-
-    return redirect(url_for('login'))
 
 @app.route("/logout")
 def logout():
