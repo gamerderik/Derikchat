@@ -11,8 +11,8 @@
     <h1>DerikChat</h1>
     <!-- Logout Button placed at top right -->
     <a href="{{ url_for('logout') }}">
-            <button class="logout-button">Logout</button>
-        </a>
+        <button class="logout-button">Logout</button>
+    </a>
 
     <h2>Post a Message:</h2>
     <form method="POST">
@@ -30,8 +30,8 @@
     <div class="message-container">
         {% for message in messages %}
         <div class="message-box">
-            <!-- Replace double newlines with <p> tags to preserve paragraphs -->
-            {{ message[1] | e | replace('\n\n', '</p><p>') | prepend('<p>') | append('</p>') | safe }}
+            <!-- Safe rendering of the processed message -->
+            {{ message[1] | safe }}
         </div>
         {% endfor %}
     </div>
