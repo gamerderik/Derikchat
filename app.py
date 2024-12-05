@@ -20,6 +20,12 @@ firebase_admin.initialize_app(cred, {
 })
 
 
+# Custom filter to convert newlines to <br> tags
+@app.template_filter('nl2br')
+def nl2br_filter(value):
+    return value.replace('\n', '<br>')
+
+
 # Firebase Helper Functions
 def save_message_to_firebase(username, message):
     """Save a new message to Firebase."""
