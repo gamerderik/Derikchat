@@ -106,6 +106,26 @@ def register():
     return render_template("register.html", error_message=error_message)
 
 
+@app.route("/login", methods=["GET", "POST"])
+def login():
+    error_message = None
+
+    if request.method == "POST":
+        username = request.form.get("username").strip()  # Remove leading/trailing spaces
+        password = request.form.get("password").strip()  # Remove leading/trailing spaces
+
+        if username and password:
+            if authenticate_user(username, password):
+                session['username'] = username
+                return redirect(url_for('home'))
+            else:
+                error_message = "Invalid username or password."
+        else:
+            error_message = "Both fields are required."
+
+    return render_template("login.html", error_message=error_message)
+
+
 @app.route("/logout")
 def logout():
     session.pop('username', None)
