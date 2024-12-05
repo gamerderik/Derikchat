@@ -28,11 +28,11 @@
     <hr>
 
     <h2>Messages:</h2>
-    <div class="message-container">
-        {% for message in messages %}
-            <div class="message-box">
-                {{ message|replace("\n", "<br>")|safe }}
-            </div>
+<div class="message-container">
+        {% for username, msg in messages %}
+        <div class="message-box">
+            <strong>{{ username }}</strong>: {{ msg }}
+        </div>
         {% endfor %}
     </div>
 
