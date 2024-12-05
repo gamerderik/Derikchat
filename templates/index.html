@@ -14,7 +14,6 @@
             <button class="logout-button">Logout</button>
         </a>
 
-
     <h2>Post a Message:</h2>
     <form method="POST">
         <textarea name="message" placeholder="Write your message here..." required></textarea><br>
@@ -28,14 +27,14 @@
     <hr>
 
     <h2>Messages:</h2>
-<div class="message-container">
-        {% for username, msg in messages %}
+    <div class="message-container">
+        {% for message in messages %}
         <div class="message-box">
-            <strong>{{ username }}</strong>: {{ msg }}
+            <!-- Replace newlines with <br> to display properly -->
+            {{ message[1] | e | replace('\n', '<br>') | safe }}
         </div>
         {% endfor %}
     </div>
-
 
     <div class="admin-form">
         <h3>Admin - Clear All Messages</h3>
