@@ -27,7 +27,7 @@ def save_message_to_firebase(username, message):
     ref.push({
         "username": username,
         "message": message,
-        "timestamp": datetime.now().isoformat()  # Store timestamp in ISO 8601 format
+        "timestamp": db.ServerValue.TIMESTAMP
     })
 
 
@@ -35,14 +35,16 @@ def load_messages_from_firebase():
     """Load all messages from Firebase."""
     ref = db.reference("messages")
     messages = ref.order_by_child("timestamp").get()
-    return [(msg.get("username", ""), msg.get("message", "")) for msg in messages.values()] if messages else []
+    return [(msg["username"], msg["message"]) for msg in messages.values()] if messages else []
 
 
-def save_user_to_firebase(username, password):
-    """Save a new user to Firebase."""
-    ref = db.reference("users")
-    ref.child(username).set({
-        "password": generate_password_hash(password)
+def save_message_to_firebase(username, message):
+    """Save a new message to Firebase."""
+    ref = db.reference("messages")
+    ref.push({
+        "username": username,
+        "message": message,
+        "timestamp": datetime.now().isoformat()  # ISO 8601 format for consistency
     })
 
 
@@ -50,30 +52,33 @@ def authenticate_user(username, password):
     """Authenticate a user using Firebase."""
     ref = db.reference("users")
     user = ref.child(username).get()
-    return user and check_password_hash(user["password"], password)
+    if user and check_password_hash(user["password"], password):
+        return True
+    return False
 
 
 # Routes
 @app.route("/", methods=["GET", "POST"])
 def home():
-    error_message = None
+    error_message = None  # Initialize error message
 
     if 'username' in session:
         # User is logged in, show the chat
         if request.method == "POST":
             message = request.form.get("message")
             if message and message.strip():
-                save_message_to_firebase(session['username'], message)
+                username = session['username']
+                save_message_to_firebase(username, message)
             else:
                 error_message = "Message cannot be blank."
 
             clear_password = request.form.get("clear_password")
             if clear_password:
                 if clear_password == ADMIN_PASSWORD:
-                    db.reference("messages").delete()
+                    db.reference("messages").delete()  # Clear all messages in Firebase
                     return redirect(url_for('home'))
                 else:
-                    error_message = "Incorrect admin password."
+                    error_message = "Incorrect password. Access denied."
 
         messages = load_messages_from_firebase()
         return render_template("index.html", messages=reversed(messages), error_message=error_message)
@@ -86,8 +91,8 @@ def register():
     error_message = None
 
     if request.method == "POST":
-        username = request.form.get("username").strip()
-        password = request.form.get("password").strip()
+        username = request.form.get("username").strip()  # Remove leading/trailing spaces
+        password = request.form.get("password").strip()  # Remove leading/trailing spaces
 
         if username and password:
             ref = db.reference("users")
@@ -107,8 +112,8 @@ def login():
     error_message = None
 
     if request.method == "POST":
-        username = request.form.get("username").strip()
-        password = request.form.get("password").strip()
+        username = request.form.get("username").strip()  # Remove leading/trailing spaces
+        password = request.form.get("password").strip()  # Remove leading/trailing spaces
 
         if username and password:
             if authenticate_user(username, password):
@@ -129,4 +134,5 @@ def logout():
 
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    # Ensures that the app binds to the port Render provides
+    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 10000)))
