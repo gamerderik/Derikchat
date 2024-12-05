@@ -28,12 +28,10 @@
 
     <h2>Messages:</h2>
     <div class="message-container">
-        {% for message in messages %}
         <div class="message">
     <strong>{{ message[0] }}:</strong> <!-- Username -->
-    <div>{{ message[1] | nl2br }}</div> <!-- Message with line breaks -->
+    <div>{{ message[1] | nl2br }}</div> <!-- Message with line breaks (if using nl2br filter) -->
 </div>
-
         {% endfor %}
     </div>
 
