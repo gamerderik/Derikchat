@@ -39,16 +39,20 @@ hr {
     max-width: 90%;
     margin-left: auto;
     margin-right: auto;
-    min-height: auto; /* Remove minimum height to prevent excessive space */
+    min-height: 0; /* Remove minimum height to prevent excessive space */
     max-height: 200px;
     overflow-y: auto;
     white-space: pre-wrap; /* Preserve newlines and spaces */
     line-height: 1.4; /* Adjust line height */
     word-wrap: break-word; /* Ensure long words break to avoid overflow */
+    margin-top: 0; /* Remove any margin above */
+    margin-bottom: 0; /* Remove any margin below */
+    padding-top: 0; /* Remove any extra padding at the top */
+    padding-bottom: 0; /* Remove any extra padding at the bottom */
 }
 
 .message-box > strong {
-    display: inline-block; /* Prevent strong element from introducing extra space */
+    display: inline; /* Ensure the strong tag does not introduce extra space */
 }
 
 
