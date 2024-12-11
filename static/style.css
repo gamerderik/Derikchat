@@ -6,51 +6,57 @@ body {
     padding: 40px 20px;
     text-align: center;
 }
+
 h1 {
     color: #2c3e50;
     font-size: 3rem;
     font-weight: bold;
     margin-bottom: 20px;
 }
+
 h2 {
     color: #34495e;
     font-size: 2rem;
     margin-top: 40px;
 }
+
 hr {
     margin: 40px 0;
     border: 1px solid #ddd;
 }
+
+/* Message container */
 .message-container {
-    max-width: 800px;
-    margin: 0 auto;
-    text-align: left;
-}
-.message-box {
-    background-color: #fff;
-    border-left: 5px solid #3498db;
-    padding: 10px 15px;
-    margin-bottom: 15px;
-    border-radius: 8px;
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-    font-size: 1rem;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; /* Apply Segoe UI font */
-    transition: box-shadow 0.3s ease;
-    max-width: 90%;
-    margin-left: auto;
-    margin-right: auto;
-    min-height: 50px;
-    max-height: 200px;
+    border: 1px solid #ccc;
+    padding: 10px;
+    max-width: 600px;
+    margin: 20px auto;
+    background-color: #f9f9f9;
+    border-radius: 10px;
     overflow-y: auto;
+    max-height: 400px; /* Optional, set a max height */
 }
 
-.message-box:hover {
-    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.15);
+/* Individual message styling */
+.message {
+    padding: 8px;
+    margin-bottom: 10px;
+    background-color: #ffffff;
+    border-radius: 5px;
+    box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
 }
-form {
-    max-width: 600px;
-    margin: 0 auto;
+
+.message strong {
+    color: #333;
+    font-weight: bold;
 }
+
+.message div {
+    white-space: pre-wrap; /* Ensures that newlines are displayed */
+    word-wrap: break-word; /* Prevents long words from breaking layout */
+}
+
+/* Textarea Styling */
 textarea {
     width: 100%;
     padding: 15px;
@@ -65,12 +71,11 @@ textarea {
     overflow-y: auto;  /* Add vertical scroll when the content exceeds max-height */
 }
 
-
-
-
 textarea:focus {
     border-color: #3498db;
 }
+
+/* Button Styling */
 button {
     padding: 15px 25px;
     background-color: #3498db;
@@ -82,9 +87,12 @@ button {
     cursor: pointer;
     transition: background-color 0.3s ease;
 }
+
 button:hover {
     background-color: #2980b9;
 }
+
+/* Admin form styling */
 .admin-form {
     margin-top: 50px;
     padding: 20px;
@@ -92,11 +100,13 @@ button:hover {
     border-radius: 10px;
     box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
 }
+
 .admin-form h3 {
     font-size: 1.5rem;
     margin-bottom: 20px;
     color: #e74c3c;
 }
+
 .admin-form input {
     padding: 12px;
     font-size: 1rem;
@@ -106,9 +116,11 @@ button:hover {
     width: 250px;
     transition: border 0.3s ease;
 }
+
 .admin-form input:focus {
     border-color: #e74c3c;
 }
+
 .admin-form button {
     padding: 12px 25px;
     background-color: #e74c3c;
@@ -119,9 +131,11 @@ button:hover {
     cursor: pointer;
     transition: background-color 0.3s ease;
 }
+
 .admin-form button:hover {
     background-color: #c0392b;
 }
+
 .error-message {
     color: red;
     font-weight: bold;
@@ -134,6 +148,7 @@ button:hover {
     margin-top: 10px;
 }
 
+/* Logout Button */
 .logout-button {
     position: absolute;
     top: 20px;
@@ -151,6 +166,7 @@ button:hover {
     background-color: #2980b9;
 }
 
+/* Responsive Design */
 @media (max-width: 768px) {
     h1 {
         font-size: 2rem;
