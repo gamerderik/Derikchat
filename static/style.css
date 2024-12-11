@@ -38,21 +38,27 @@ hr {
 }
 
 /* Individual message styling */
-.message {
-    padding: 15px;
-    margin-bottom: 15px; /* Space between messages */
-    background-color: #ffffff;
+.message-box {
+    background-color: #fff;
+    border-left: 5px solid #3498db;
+    padding: 10px 15px;
+    margin-bottom: 15px;
     border-radius: 8px;
-    box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
-    text-align: left;  /* Ensure text is left-aligned */
-    word-wrap: break-word; /* Ensure long words break to new lines */
-    white-space: pre-wrap; /* Ensure newlines are preserved */
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    font-size: 1rem;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; /* Apply Segoe UI font */
+    transition: box-shadow 0.3s ease;
+    max-width: 90%;
+    margin-left: auto;
+    margin-right: auto;
+    min-height: 50px;
+    max-height: 200px;
+    overflow-y: auto;
 }
 
-/* Bold username styling */
-.message strong {
-    color: #3498db;
-    font-weight: bold;
+/* Hover effect for the message box */
+.message-box:hover {
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.15);
 }
 
 /* Textarea Styling */
@@ -70,6 +76,7 @@ textarea {
     overflow-y: auto;  /* Add vertical scroll when the content exceeds max-height */
 }
 
+/* Focus effect for textarea */
 textarea:focus {
     border-color: #3498db;
 }
@@ -87,81 +94,8 @@ button {
     transition: background-color 0.3s ease;
 }
 
+/* Hover effect for button */
 button:hover {
-    background-color: #2980b9;
-}
-
-/* Admin form styling */
-.admin-form {
-    margin-top: 50px;
-    padding: 20px;
-    background-color: #ecf0f1;
-    border-radius: 10px;
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-}
-
-.admin-form h3 {
-    font-size: 1.5rem;
-    margin-bottom: 20px;
-    color: #e74c3c;
-}
-
-.admin-form input {
-    padding: 12px;
-    font-size: 1rem;
-    border-radius: 8px;
-    border: 1px solid #ddd;
-    margin-right: 15px;
-    width: 250px;
-    transition: border 0.3s ease;
-}
-
-.admin-form input:focus {
-    border-color: #e74c3c;
-}
-
-.admin-form button {
-    padding: 12px 25px;
-    background-color: #e74c3c;
-    color: white;
-    font-size: 1rem;
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: background-color 0.3s ease;
-}
-
-.admin-form button:hover {
-    background-color: #c0392b;
-}
-
-.error-message {
-    color: red;
-    font-weight: bold;
-    margin-top: 10px;
-}
-
-.success-message {
-    color: green;
-    font-weight: bold;
-    margin-top: 10px;
-}
-
-/* Logout Button */
-.logout-button {
-    position: absolute;
-    top: 20px;
-    right: 20px;
-    padding: 10px 20px;
-    background-color: #3498db;
-    color: white;
-    font-size: 1rem;
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
-}
-
-.logout-button:hover {
     background-color: #2980b9;
 }
 
@@ -178,12 +112,6 @@ button:hover {
     button {
         font-size: 1rem;
         padding: 12px 20px;
-    }
-
-    .admin-form input,
-    .admin-form button {
-        width: 100%;
-        margin: 10px 0;
     }
 
     .message-box {
