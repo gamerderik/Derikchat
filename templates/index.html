@@ -9,6 +9,7 @@
 <body>
 
     <h1>DerikChat</h1>
+    <!-- Logout Button placed at top right -->
     <a href="{{ url_for('logout') }}">
         <button class="logout-button">Logout</button>
     </a>
@@ -28,9 +29,9 @@
     <h2>Messages:</h2>
     <div class="message-container">
         {% for message in messages %}
-        <div class="message">
-            <strong>{{ message[0] }}:</strong>
-            <div>{{ message[1] | nl2br | safe }}</div>
+        <div class="message-box">
+            <strong>{{ message[0] }}:</strong> <!-- Display username -->
+            {{ message[1] | nl2br }} <!-- Display message with preserved formatting -->
         </div>
         {% endfor %}
     </div>
