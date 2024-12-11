@@ -30,11 +30,11 @@ hr {
     background-color: #fff;
     border-left: 5px solid #3498db;
     padding: 10px 15px;
-    margin-bottom: 15px;
+    margin-bottom: 10px; /* Adjust this if you still want space between boxes */
     border-radius: 8px;
     box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
     font-size: 1rem;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; /* Apply Segoe UI font */
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     transition: box-shadow 0.3s ease;
     max-width: 90%;
     margin-left: auto;
@@ -42,7 +42,8 @@ hr {
     min-height: 50px;
     max-height: 200px;
     overflow-y: auto;
-    white-space: pre-wrap;
+    white-space: pre-wrap; /* Preserve newlines and spaces */
+    margin: 0; /* Remove extra margin */
 }
 
 .message-box:hover {
