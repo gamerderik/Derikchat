@@ -28,13 +28,13 @@
 
     <h2>Messages:</h2>
     <div class="message-container">
-        <div class="message">
-    <strong>{{ message[0] }}:</strong> <!-- Username -->
-    <div>{{ message[1] | nl2br }}</div> <!-- Message with line breaks (if using nl2br filter) -->
-</div>
+        {% for message in messages %}
+            <div class="message">
+                <strong>{{ message[0] }}:</strong> <!-- Username -->
+                <div>{{ message[1] | safe }}</div> <!-- Message content -->
+            </div>
         {% endfor %}
     </div>
-
 
     <div class="admin-form">
         <h3>Admin - Clear All Messages</h3>
