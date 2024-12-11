@@ -29,31 +29,29 @@ hr {
 .message-container {
     border: 1px solid #ccc;
     padding: 10px;
-    max-width: 600px;
+    max-width: 800px;  /* Increased width for a bigger container */
     margin: 20px auto;
     background-color: #f9f9f9;
     border-radius: 10px;
     overflow-y: auto;
-    max-height: 400px; /* Optional, set a max height */
+    max-height: 500px; /* Increased max height for better display */
 }
 
 /* Individual message styling */
 .message {
-    padding: 8px;
-    margin-bottom: 10px;
+    padding: 15px;
+    margin-bottom: 15px; /* Space between messages */
     background-color: #ffffff;
-    border-radius: 5px;
+    border-radius: 8px;
     box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+    text-align: left;  /* Ensure text is left-aligned */
+    word-wrap: break-word; /* Ensure long words break to new lines */
+    white-space: pre-wrap; /* Ensure newlines are preserved */
 }
 
-/* Ensure line breaks in messages */
-.message div {
-    white-space: pre-wrap; /* Ensures newlines are displayed properly */
-    word-wrap: break-word; /* Prevents long words from breaking layout */
-}
-
+/* Bold username styling */
 .message strong {
-    color: #333;
+    color: #3498db;
     font-weight: bold;
 }
 
