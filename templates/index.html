@@ -31,7 +31,7 @@
         {% for message in messages %}
         <div class="message-box">
             <strong>{{ message[0] }}:</strong> <!-- Display username -->
-            {{ message[1] | nl2br }} <!-- Display message with preserved formatting -->
+            {{ message[1] | safe }}
         </div>
         {% endfor %}
     </div>
