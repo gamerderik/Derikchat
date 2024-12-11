@@ -43,7 +43,12 @@ hr {
     max-height: 200px;
     overflow-y: auto;
     white-space: pre-wrap; /* Preserve newlines and spaces */
-    line-height: 1.4; /* Control line height to reduce extra vertical space */
+    line-height: 1.4; /* Adjust line height */
+    word-wrap: break-word; /* Ensure long words break to avoid overflow */
+}
+
+.message-box > strong {
+    display: inline-block; /* Prevent strong element from introducing extra space */
 }
 
 
