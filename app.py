@@ -88,38 +88,16 @@ def home():
 
         messages = load_messages_from_firebase()
 
-        # Preprocess messages to preserve paragraphs
+        # Preprocess messages using the nl2br filter to handle newlines properly
         processed_messages = []
         for username, message in messages:
-            # Wrap each message with <p> tags, replacing double newlines with paragraph breaks
-            message = message.replace('\n\n', '</p><p>')  # Replace double newlines with <p> tags
-            message = f'<p>{message}</p>'  # Wrap the entire message in <p> tags
+            # Apply nl2br filter to handle newlines as <br> tags
+            message = message.replace('\n', '<br>')  # Convert newlines to <br>
             processed_messages.append((username, message))
 
         return render_template("index.html", messages=reversed(processed_messages), error_message=error_message)
 
     return redirect(url_for('login'))
-
-
-@app.route("/register", methods=["GET", "POST"])
-def register():
-    error_message = None
-
-    if request.method == "POST":
-        username = request.form.get("username").strip()  # Remove leading/trailing spaces
-        password = request.form.get("password").strip()  # Remove leading/trailing spaces
-
-        if username and password:
-            ref = db.reference("users")
-            if ref.child(username).get():
-                error_message = "Username already taken."
-            else:
-                save_user_to_firebase(username, password)
-                return redirect(url_for('login'))
-        else:
-            error_message = "Both fields are required."
-
-    return render_template("register.html", error_message=error_message)
 
 
 @app.route("/login", methods=["GET", "POST"])
