@@ -30,31 +30,19 @@ hr {
     background-color: #fff;
     border-left: 5px solid #3498db;
     padding: 10px 15px;
-    margin-bottom: 10px; /* Adjust space between message boxes */
+    margin-bottom: 15px;
     border-radius: 8px;
     box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
     font-size: 1rem;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; /* Apply Segoe UI font */
     transition: box-shadow 0.3s ease;
     max-width: 90%;
     margin-left: auto;
     margin-right: auto;
-    min-height: 0; /* Remove minimum height to prevent excessive space */
+    min-height: 50px;
     max-height: 200px;
     overflow-y: auto;
-    white-space: pre-wrap; /* Preserve newlines and spaces */
-    line-height: 1.4; /* Adjust line height */
-    word-wrap: break-word; /* Ensure long words break to avoid overflow */
-    margin-top: 0; /* Remove any margin above */
-    margin-bottom: 0; /* Remove any margin below */
-    padding-top: 0; /* Remove any extra padding at the top */
-    padding-bottom: 0; /* Remove any extra padding at the bottom */
 }
-
-.message-box > strong {
-    display: inline; /* Ensure the strong tag does not introduce extra space */
-}
-
 
 .message-box:hover {
     box-shadow: 0 5px 20px rgba(0, 0, 0, 0.15);
