@@ -100,6 +100,27 @@ def home():
     return redirect(url_for('login'))
 
 
+@app.route("/register", methods=["GET", "POST"])
+def register():
+    error_message = None
+
+    if request.method == "POST":
+        username = request.form.get("username").strip()  # Remove leading/trailing spaces
+        password = request.form.get("password").strip()  # Remove leading/trailing spaces
+
+        if username and password:
+            ref = db.reference("users")
+            if ref.child(username).get():
+                error_message = "Username already taken."
+            else:
+                save_user_to_firebase(username, password)
+                return redirect(url_for('login'))
+        else:
+            error_message = "Both fields are required."
+
+    return render_template("register.html", error_message=error_message)
+
+
 @app.route("/login", methods=["GET", "POST"])
 def login():
     error_message = None
