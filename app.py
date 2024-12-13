@@ -79,6 +79,8 @@ def home():
             if message and message.strip():
                 username = session['username']
                 save_message_to_firebase(username, message)
+                return redirect(url_for('home'))  # Redirect after POST to avoid resubmitting
+
             else:
                 error_message = "Message cannot be blank."
 
@@ -86,23 +88,23 @@ def home():
             if clear_password:
                 if clear_password == ADMIN_PASSWORD:
                     db.reference("messages").delete()  # Clear all messages in Firebase
-                    return redirect(url_for('home'))
+                    return redirect(url_for('home'))  # Redirect after clearing messages
                 else:
                     error_message = "Incorrect password. Access denied."
 
         messages = load_messages_from_firebase()
 
-        # Preprocess messages using the nl2br filter to handle newlines properly
+        # Preprocess messages to preserve paragraphs
         processed_messages = []
         for username, message in messages:
-            # Apply nl2br filter to handle newlines as <br> tags
-            message = message.replace('\n', '<br>')  # Convert newlines to <br>
+            # Wrap each message with <p> tags, replacing double newlines with paragraph breaks
+            message = message.replace('\n\n', '</p><p>')  # Replace double newlines with <p> tags
+            message = f'<p>{message}</p>'  # Wrap the entire message in <p> tags
             processed_messages.append((username, message))
 
         return render_template("index.html", messages=reversed(processed_messages), error_message=error_message)
 
     return redirect(url_for('login'))
-
 
 @app.route("/register", methods=["GET", "POST"])
 def register():
