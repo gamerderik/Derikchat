@@ -28,10 +28,11 @@ def nl2br_filter(value):
 
 
 # Firebase Helper Functions
+
 def save_message_to_firebase(username, message):
-    """Save a new message to Firebase with HTML escaping."""
-    # Escape the message to prevent HTML from being rendered
-    escaped_message = html.escape(message)
+    """Save a new message to Firebase with HTML escaping and preserving newlines."""
+    # Escape the HTML tags and preserve newlines
+    escaped_message = html.escape(message).replace('\n', '<br>')
     ref = db.reference("messages")
     ref.push({
         "username": username,
