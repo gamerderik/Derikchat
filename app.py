@@ -1,5 +1,6 @@
 import os
 import json
+import html
 from flask import Flask, request, render_template, redirect, url_for, session
 import firebase_admin
 from firebase_admin import credentials, db
@@ -28,11 +29,13 @@ def nl2br_filter(value):
 
 # Firebase Helper Functions
 def save_message_to_firebase(username, message):
-    """Save a new message to Firebase."""
+    """Save a new message to Firebase with HTML escaping."""
+    # Escape the message to prevent HTML from being rendered
+    escaped_message = html.escape(message)
     ref = db.reference("messages")
     ref.push({
         "username": username,
-        "message": message,
+        "message": escaped_message,
         "timestamp": datetime.now().isoformat()  # ISO 8601 format for consistency
     })
 
