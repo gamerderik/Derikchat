@@ -59,10 +59,10 @@ textarea {
     font-size: 1rem;
     margin-bottom: 15px;
     outline: none;
-    resize: none;  /* Prevent manual resizing by the user */
-    min-height: 100px;  /* Set a medium initial height */
-    max-height: 300px;  /* Maximum height the textarea can grow to */
-    overflow-y: auto;  /* Add vertical scroll when the content exceeds max-height */
+    min-height: 100px;  /* Set a minimum height */
+    max-height: 300px;  /* Maximum height */
+    overflow-y: auto;  /* Enable vertical scrolling */
+    resize: vertical;  /* Allow resizing vertically */
 }
 
 
