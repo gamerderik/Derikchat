@@ -31,10 +31,11 @@
     {% for username, message in messages %}
     <div class="message-box">
         <strong>{{ username }}:</strong> <!-- Display username -->
-        <span>{{ message }}</span>  <!-- Display the escaped message as plain text -->
+        <span>{{ message | safe }}</span>  <!-- Render the message with <br> tags preserved -->
     </div>
     {% endfor %}
 </div>
+
 
 
     <div class="admin-form">
