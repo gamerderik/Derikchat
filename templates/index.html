@@ -27,14 +27,15 @@
     <hr>
 
     <h2>Messages:</h2>
-    <div class="message-container">
-        {% for message in messages %}
-        <div class="message-box">
-            <strong>{{ message[0] }}:</strong> <!-- Display username -->
-            {{ message[1] | safe }}
-        </div>
-        {% endfor %}
+<div class="message-container">
+    {% for username, message in messages %}
+    <div class="message-box">
+        <strong>{{ username }}:</strong> <!-- Display username -->
+        <span>{{ message }}</span>  <!-- Display the escaped message as plain text -->
     </div>
+    {% endfor %}
+</div>
+
 
     <div class="admin-form">
         <h3>Admin - Clear All Messages</h3>
