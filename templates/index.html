@@ -42,12 +42,6 @@
     <script>
         const socket = io();  // Connect to the Socket.IO server
         const username = "{{ session['username'] }}";  // Get the current username from Flask session
-
-        // Automatically adjust the height of the textarea based on content
-        document.addEventListener('input', function (event) {
-            if (event.target.tagName === 'TEXTAREA') {
-                event.target.style.height = 'auto';  // Reset height
-                event.target.style.height = (event.target.scrollHeight) + 'px';  // Set new height based on content
             }
         });
 
@@ -76,9 +70,15 @@
             appendMessage(data.username, data.message);
         });
 
-        // Notify when a user joins
-        socket.emit('join', { username });
+        // The following line to emit 'join' is no longer needed
+        // socket.emit('join', { username });
     </script>
+
+// Automatically adjust the height of the textarea based on content
+        document.addEventListener('input', function (event) {
+            if (event.target.tagName === 'TEXTAREA') {
+                event.target.style.height = 'auto';  // Reset height
+                event.target.style.height = (event.target.scrollHeight) + 'px';  // Set new height based on content
 
 </body>
 </html>
