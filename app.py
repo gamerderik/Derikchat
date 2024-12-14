@@ -116,7 +116,6 @@ def handle_send_message(data):
 def handle_join(data):
     """Handle a user joining the chat."""
     username = data['username']
-    emit('receive_message', {'username': 'System', 'message': f'{username} has joined the chat.'}, broadcast=True)
 
 
 if __name__ == "__main__":
