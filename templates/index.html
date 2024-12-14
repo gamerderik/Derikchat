@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>DerikChat</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script src="https://cdn.socket.io/4.5.1/socket.io.min.js"></script>
 </head>
 <body>
 
@@ -15,28 +16,15 @@
     </a>
 
     <h2>Post a Message:</h2>
-    <form method="POST">
-        <textarea name="message" placeholder="Write your message here..." required></textarea><br>
-        <button type="submit">Post Message</button>
-    </form>
-
-    {% if error_message %}
-        <p style="color: red;">{{ error_message }}</p>
-    {% endif %}
+    <textarea id="messageBox" placeholder="Write your message here..." required></textarea><br>
+    <button id="sendButton">Post Message</button>
 
     <hr>
 
     <h2>Messages:</h2>
-<div class="message-container">
-    {% for username, message in messages %}
-    <div class="message-box">
-        <strong>{{ username }}:</strong> <!-- Display username -->
-        <span>{{ message | safe }}</span>  <!-- Render the message with <br> tags preserved -->
+    <div class="message-container" id="messages">
+        <!-- Messages will be appended here dynamically -->
     </div>
-    {% endfor %}
-</div>
-
-
 
     <div class="admin-form">
         <h3>Admin - Clear All Messages</h3>
@@ -51,15 +39,46 @@
         {% endif %}
     </div>
 
-<script>
-    // Automatically adjust the height of the textarea based on content
-    document.addEventListener('input', function (event) {
-        if (event.target.tagName === 'TEXTAREA') {
-            event.target.style.height = 'auto';  // Reset height
-            event.target.style.height = (event.target.scrollHeight) + 'px';  // Set new height based on content
+    <script>
+        const socket = io();  // Connect to the Socket.IO server
+        const username = "{{ session['username'] }}";  // Get the current username from Flask session
+
+        // Automatically adjust the height of the textarea based on content
+        document.addEventListener('input', function (event) {
+            if (event.target.tagName === 'TEXTAREA') {
+                event.target.style.height = 'auto';  // Reset height
+                event.target.style.height = (event.target.scrollHeight) + 'px';  // Set new height based on content
+            }
+        });
+
+        // Function to append messages to the chat window
+        function appendMessage(username, message) {
+            const messagesDiv = document.getElementById('messages');
+            const newMessage = document.createElement('div');
+            newMessage.className = 'message-box';
+            newMessage.innerHTML = `<strong>${username}:</strong> <span>${message}</span>`;
+            messagesDiv.appendChild(newMessage);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;  // Auto-scroll to the bottom
         }
-    });
-</script>
+
+        // Send message to the server
+        document.getElementById('sendButton').addEventListener('click', () => {
+            const messageBox = document.getElementById('messageBox');
+            const message = messageBox.value.trim();
+            if (message) {
+                socket.emit('send_message', { username, message });
+                messageBox.value = '';  // Clear the input box
+            }
+        });
+
+        // Listen for incoming messages
+        socket.on('receive_message', (data) => {
+            appendMessage(data.username, data.message);
+        });
+
+        // Notify when a user joins
+        socket.emit('join', { username });
+    </script>
 
 </body>
 </html>
