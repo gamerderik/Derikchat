@@ -59,13 +59,14 @@
 
         // Function to append messages to the chat window
         function appendMessage(username, message) {
-            const messagesDiv = document.getElementById('messages');
-            const newMessage = document.createElement('div');
-            newMessage.className = 'message-box';
-            newMessage.innerHTML = `<strong>${username}:</strong> <span>${message}</span>`;
-            messagesDiv.appendChild(newMessage);
-            messagesDiv.scrollTop = messagesDiv.scrollHeight;  // Auto-scroll to the bottom
-        }
+    const messagesDiv = document.getElementById('messages');
+    const newMessage = document.createElement('div');
+    newMessage.className = 'message-box';
+    newMessage.innerHTML = `<strong>${username}:</strong> <span>${message}</span>`;
+    messagesDiv.appendChild(newMessage);
+    messagesDiv.scrollTop = messagesDiv.scrollHeight;  // Auto-scroll to the bottom
+}
+
 
         // Send message to the server
         document.getElementById('sendButton').addEventListener('click', () => {
@@ -83,12 +84,17 @@
         });
 
         // Listen for the message history from the server
-        socket.on('message_history', (data) => {
-            const messages = data.messages;  // Array of previous messages
-            messages.forEach(([username, message]) => {
-              appendMessage(username, message);  // Add each message to the chat window
-           });
-       });
+      socket.on('message_history', (data) => {
+    const messages = data.messages;
+    // Loop through the messages and append them to the chat window
+    messages.forEach((messageData) => {
+        appendMessage(messageData.username, messageData.message);
+    });
+});
+;
+
+socket.emit('join', { username: username });
+
 
     </script>
 
