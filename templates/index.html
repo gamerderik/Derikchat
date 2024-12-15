@@ -40,10 +40,17 @@
     </div>
 
     <script>
-        const socket = io();  // Connect to the Socket.IO server
-        const username = "{{ session['username'] }}";  // Get the current username from Flask session
-            }
-        });
+    const socket = io();  // Connect to the Socket.IO server
+    const username = "{{ session['username'] }}";  // Get the current username from Flask session
+
+    // Automatically adjust the height of the textarea based on content
+    document.addEventListener('input', function (event) {
+        if (event.target.tagName === 'TEXTAREA') {
+            event.target.style.height = 'auto';  // Reset height
+            event.target.style.height = (event.target.scrollHeight) + 'px';  // Set new height based on content
+        }
+    });
+
 
         // Function to append messages to the chat window
         function appendMessage(username, message) {
@@ -73,12 +80,6 @@
         // The following line to emit 'join' is no longer needed
         // socket.emit('join', { username });
     </script>
-
-// Automatically adjust the height of the textarea based on content
-        document.addEventListener('input', function (event) {
-            if (event.target.tagName === 'TEXTAREA') {
-                event.target.style.height = 'auto';  // Reset height
-                event.target.style.height = (event.target.scrollHeight) + 'px';  // Set new height based on content
 
 </body>
 </html>
