@@ -50,8 +50,10 @@ def load_messages_from_firebase():
 def home():
     if 'username' in session:
         username = session['username']
-        return render_template("index.html", username=username)
+        messages = load_messages_from_firebase()  # Fetch old messages
+        return render_template("index.html", username=username, messages=messages)
     return redirect(url_for('login'))
+
 
 
 @app.route("/register", methods=["GET", "POST"])
@@ -114,8 +116,13 @@ def handle_send_message(data):
 
 @socketio.on('join')
 def handle_join(data):
-    """Handle a user joining the chat."""
+    """Handle a user joining the chat and send them the message history."""
     username = data['username']
+    # Load previous messages from Firebase
+    messages = load_messages_from_firebase()
+    # Send the message history to the new user
+    emit('message_history', {'messages': messages}, room=request.sid)
+
 
 
 if __name__ == "__main__":
