@@ -22,9 +22,14 @@
     <hr>
 
     <h2>Messages:</h2>
-    <div class="message-container" id="messages">
-        <!-- Messages will be appended here dynamically -->
-    </div>
+<div class="message-container" id="messages">
+    {% for message in messages %}
+        <div class="message-box">
+            <strong>{{ message[0] }}:</strong> <span>{{ message[1]|safe }}</span>
+        </div>
+    {% endfor %}
+</div>
+
 
     <div class="admin-form">
         <h3>Admin - Clear All Messages</h3>
