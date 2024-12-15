@@ -77,8 +77,14 @@
             appendMessage(data.username, data.message);
         });
 
-        // The following line to emit 'join' is no longer needed
-        // socket.emit('join', { username });
+        // Listen for the message history from the server
+        socket.on('message_history', (data) => {
+            const messages = data.messages;  // Array of previous messages
+            messages.forEach(([username, message]) => {
+              appendMessage(username, message);  // Add each message to the chat window
+           });
+       });
+
     </script>
 
 </body>
