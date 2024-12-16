@@ -56,16 +56,16 @@ document.addEventListener("input", (event) => {
     }
 });
 
-// Append a single message to the chat window
+// Prepend a single message to the chat window (newest messages at the top)
 function appendMessage(username, message) {
     if (!username || !message) return; // Skip invalid messages
     const messagesDiv = document.getElementById("messages");
     const newMessage = document.createElement("div");
     newMessage.className = "message-box";
     newMessage.innerHTML = `<strong>${username}:</strong> <span>${message}</span>`;
-    messagesDiv.appendChild(newMessage);
-    messagesDiv.scrollTop = messagesDiv.scrollHeight; // Auto-scroll to the bottom
+    messagesDiv.prepend(newMessage); // Add the new message at the top
 }
+
 
 // Send message to the server
 document.getElementById("sendButton").addEventListener("click", () => {
@@ -87,13 +87,15 @@ socket.on("receive_message", (data) => {
 // Listen for the message history from the server
 socket.on("message_history", (data) => {
     const messages = data.messages || [];
-    messages.forEach((messageData) => {
+    // Reverse the messages array to show the newest messages first
+    messages.reverse().forEach((messageData) => {
         const { username, message } = messageData;
         if (username && message) {
             appendMessage(username, message);
         }
     });
 });
+
 
 // Emit join event once
 socket.emit("join", { username });
