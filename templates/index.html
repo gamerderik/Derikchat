@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>DerikChat</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-    <script src="https://cdn.socket.io/4.5.1/socket.io.min.js"></script>
 </head>
 <body>
 
@@ -16,20 +15,26 @@
     </a>
 
     <h2>Post a Message:</h2>
-    <textarea id="messageBox" placeholder="Write your message here..." required></textarea><br>
-    <button id="sendButton">Post Message</button>
+    <form method="POST">
+        <textarea name="message" placeholder="Write your message here..." required></textarea><br>
+        <button type="submit">Post Message</button>
+    </form>
+
+    {% if error_message %}
+        <p style="color: red;">{{ error_message }}</p>
+    {% endif %}
 
     <hr>
 
     <h2>Messages:</h2>
-<div class="message-container" id="messages">
-    {% for message in messages %}
+    <div class="message-container">
+        {% for message in messages %}
         <div class="message-box">
-            <strong>{{ message[0] }}:</strong> <span>{{ message[1]|safe }}</span>
+            <strong>{{ message[0] }}:</strong> <!-- Display username -->
+            {{ message[1] | safe }}
         </div>
-    {% endfor %}
-</div>
-
+        {% endfor %}
+    </div>
 
     <div class="admin-form">
         <h3>Admin - Clear All Messages</h3>
@@ -44,72 +49,15 @@
         {% endif %}
     </div>
 
-    <script>
-const socket = io(); // Connect to the Socket.IO server
-const username = "{{ session['username'] }}"; // Get the current username from Flask session
-
-// Adjust textarea height automatically
-document.addEventListener("input", (event) => {
-    if (event.target.tagName === "TEXTAREA") {
-        event.target.style.height = "auto"; // Reset height
-        event.target.style.height = `${event.target.scrollHeight}px`; // Adjust height
-    }
-});
-
-function appendMessage(username, message, prepend = false) {
-    if (!username || !message) return; // Skip invalid messages
-    const messagesDiv = document.getElementById("messages");
-    const newMessage = document.createElement("div");
-    newMessage.className = "message-box";
-    newMessage.innerHTML = `<strong>${username}:</strong> <span>${message}</span>`;
-    if (prepend) {
-        messagesDiv.prepend(newMessage); // Add at the top for history
-    } else {
-        messagesDiv.appendChild(newMessage); // Add at the bottom for real-time messages
-    }
-    messagesDiv.scrollTop = messagesDiv.scrollHeight; // Auto-scroll for real-time messages
-}
-
-
-
-
-// Send message to the server
-document.getElementById("sendButton").addEventListener("click", () => {
-    const messageBox = document.getElementById("messageBox");
-    const message = messageBox.value.trim();
-    if (message) {
-        console.log("Sending message:", message);  // Debugging log
-        socket.emit("send_message", { username, message });
-        messageBox.value = ""; // Clear the input box
-    } else {
-        console.log("Message is empty, not sending.");  // Debugging log
-    }
-});
-
-
-// Listen for incoming messages
-socket.on("receive_message", (data) => {
-    if (data && data.username && data.message) {
-        appendMessage(data.username, data.message, false); // Append at the bottom
-    }
-});
-
-// Listen for the message history from the server
-socket.on("message_history", (data) => {
-    const messages = data.messages || [];
-    messages.reverse().forEach((messageData) => {
-        const { username, message } = messageData;
-        if (username && message) {
-            appendMessage(username, message, true); // Prepend for history
+<script>
+    // Automatically adjust the height of the textarea based on content
+    document.addEventListener('input', function (event) {
+        if (event.target.tagName === 'TEXTAREA') {
+            event.target.style.height = 'auto';  // Reset height
+            event.target.style.height = (event.target.scrollHeight) + 'px';  // Set new height based on content
         }
     });
-});
-
-
-// Emit join event once
-socket.emit("join", { username });
-
-    </script>
+</script>
 
 </body>
 </html>
