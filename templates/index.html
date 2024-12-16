@@ -63,7 +63,7 @@ function appendMessage(username, message, prepend = false) {
     newMessage.className = "message-box";
     newMessage.innerHTML = `<strong>${username}:</strong> <span>${message}</span>`;
     if (prepend) {
-        messagesDiv.prepend(newMessage); // Add at the top
+        messagesDiv.prepend(newMessage); // Add at the top for history
     } else {
         messagesDiv.appendChild(newMessage); // Add at the bottom for real-time messages
     }
@@ -72,20 +72,25 @@ function appendMessage(username, message, prepend = false) {
 
 
 
+
 // Send message to the server
 document.getElementById("sendButton").addEventListener("click", () => {
     const messageBox = document.getElementById("messageBox");
     const message = messageBox.value.trim();
     if (message) {
+        console.log("Sending message:", message);  // Debugging log
         socket.emit("send_message", { username, message });
         messageBox.value = ""; // Clear the input box
+    } else {
+        console.log("Message is empty, not sending.");  // Debugging log
     }
 });
+
 
 // Listen for incoming messages
 socket.on("receive_message", (data) => {
     if (data && data.username && data.message) {
-        appendMessage(data.username, data.message);
+        appendMessage(data.username, data.message, false); // Append at the bottom
     }
 });
 
@@ -99,8 +104,6 @@ socket.on("message_history", (data) => {
         }
     });
 });
-
-
 
 
 // Emit join event once
