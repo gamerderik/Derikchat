@@ -1,18 +1,12 @@
-import eventlet
-eventlet.monkey_patch()
-
 import os
 import json
-import html
 from flask import Flask, request, render_template, redirect, url_for, session
-from flask_socketio import SocketIO, emit, join_room, leave_room
 import firebase_admin
 from firebase_admin import credentials, db
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime
 
 app = Flask(__name__)
-socketio = SocketIO(app)  # Initialize SocketIO
 
 # Secret key for Flask session
 app.secret_key = os.getenv("FLASK_SECRET_KEY", "default-secret-key")
@@ -26,14 +20,19 @@ firebase_admin.initialize_app(cred, {
 })
 
 
+# Custom filter to convert newlines to <br> tags
+@app.template_filter('nl2br')
+def nl2br_filter(value):
+    return value.replace('\n', '<br>')
+
+
 # Firebase Helper Functions
 def save_message_to_firebase(username, message):
-    """Save a new message to Firebase with HTML escaping and preserving newlines."""
-    escaped_message = html.escape(message).replace('\n', '<br>')  # Escape HTML
+    """Save a new message to Firebase."""
     ref = db.reference("messages")
     ref.push({
         "username": username,
-        "message": escaped_message,
+        "message": message,
         "timestamp": datetime.now().isoformat()  # ISO 8601 format for consistency
     })
 
@@ -42,62 +41,103 @@ def load_messages_from_firebase():
     """Load all messages from Firebase."""
     ref = db.reference("messages")
     messages = ref.order_by_child("timestamp").get()
-    return [
-        {"username": msg.get("username", ""), "message": msg.get("message", "")}
-        for msg in messages.values() if "username" in msg and "message" in msg
-    ] if messages else []
+    return [(msg["username"], msg["message"]) for msg in messages.values()] if messages else []
+
+
+def save_user_to_firebase(username, password):
+    """Save a new user to Firebase."""
+    ref = db.reference("users")
+    ref.child(username).set({
+        "username": username,
+        "password": generate_password_hash(password)
+    })
+
+
+
+def authenticate_user(username, password):
+    """Authenticate a user using Firebase."""
+    ref = db.reference("users")
+    user = ref.child(username).get()
+    if user and check_password_hash(user["password"], password):
+        return True
+    return False
 
 
 # Routes
 @app.route("/", methods=["GET", "POST"])
 def home():
-    if 'username' in session:
-        username = session['username']
-        messages = load_messages_from_firebase()  # Fetch old messages
-        return render_template("index.html", username=username, messages=messages)
-    return redirect(url_for('login'))
+    error_message = None  # Initialize error message
 
+    if 'username' in session:
+        # User is logged in, show the chat
+        if request.method == "POST":
+            message = request.form.get("message")
+            if message and message.strip():
+                username = session['username']
+                save_message_to_firebase(username, message)
+            else:
+                error_message = "Message cannot be blank."
+
+            clear_password = request.form.get("clear_password")
+            if clear_password:
+                if clear_password == ADMIN_PASSWORD:
+                    db.reference("messages").delete()  # Clear all messages in Firebase
+                    return redirect(url_for('home'))
+                else:
+                    error_message = "Incorrect password. Access denied."
+
+        messages = load_messages_from_firebase()
+
+        # Preprocess messages using the nl2br filter to handle newlines properly
+        processed_messages = []
+        for username, message in messages:
+            # Apply nl2br filter to handle newlines as <br> tags
+            message = message.replace('\n', '<br>')  # Convert newlines to <br>
+            processed_messages.append((username, message))
+
+        return render_template("index.html", messages=reversed(processed_messages), error_message=error_message)
+
+    return redirect(url_for('login'))
 
 
 @app.route("/register", methods=["GET", "POST"])
 def register():
     error_message = None
+
     if request.method == "POST":
-        username = request.form.get("username").strip()
-        password = request.form.get("password").strip()
+        username = request.form.get("username").strip()  # Remove leading/trailing spaces
+        password = request.form.get("password").strip()  # Remove leading/trailing spaces
 
         if username and password:
             ref = db.reference("users")
             if ref.child(username).get():
                 error_message = "Username already taken."
             else:
-                ref.child(username).set({
-                    "username": username,
-                    "password": generate_password_hash(password)
-                })
+                save_user_to_firebase(username, password)
                 return redirect(url_for('login'))
         else:
             error_message = "Both fields are required."
+
     return render_template("register.html", error_message=error_message)
 
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
     error_message = None
+
     if request.method == "POST":
-        username = request.form.get("username").strip()
-        password = request.form.get("password").strip()
+        username = request.form.get("username").strip()  # Remove leading/trailing spaces
+        password = request.form.get("password").strip()  # Remove leading/trailing spaces
 
         if username and password:
-            ref = db.reference("users")
-            user = ref.child(username).get()
-            if user and check_password_hash(user["password"], password):
+            if authenticate_user(username, password):
                 session['username'] = username
                 return redirect(url_for('home'))
             else:
                 error_message = "Invalid username or password."
         else:
             error_message = "Both fields are required."
+
     return render_template("login.html", error_message=error_message)
 
 
@@ -107,35 +147,6 @@ def logout():
     return redirect(url_for('login'))
 
 
-# Socket.IO Events
-@socketio.on('send_message')
-def handle_send_message(data):
-    """Handle sending a new message."""
-    username = data.get('username', '').strip()
-    message = data.get('message', '').strip()
-    if username and message:  # Only process if both fields are valid
-        print(f"Received message from {username}: {message}")  # Debugging log
-        save_message_to_firebase(username, message)
-        emit('receive_message', {
-            'username': username,
-            'message': html.escape(message).replace('\n', '<br>')
-        }, broadcast=True)
-    else:
-        print("Received empty message")  # Debugging log
-
-
-
-@socketio.on('join')
-def handle_join(data):
-    """Handle a user joining the chat and send them the message history."""
-    username = data['username']
-    # Load previous messages from Firebase
-    messages = load_messages_from_firebase()
-    # Send the message history to the new user
-    emit('message_history', {'messages': messages}, room=request.sid)
-
-
-
-
 if __name__ == "__main__":
-    socketio.run(app, host="0.0.0.0", port=int(os.environ.get("PORT", 10000)))
+    # Ensures that the app binds to the port Render provides
+    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 10000)))
