@@ -29,8 +29,6 @@ firebase_admin.initialize_app(cred, {
 # Firebase Helper Functions
 def save_message_to_firebase(username, message):
     """Save a new message to Firebase with HTML escaping and preserving newlines."""
-    if not username or not message.strip():  # Skip invalid data
-        return
     escaped_message = html.escape(message).replace('\n', '<br>')  # Escape HTML
     ref = db.reference("messages")
     ref.push({
@@ -38,7 +36,6 @@ def save_message_to_firebase(username, message):
         "message": escaped_message,
         "timestamp": datetime.now().isoformat()  # ISO 8601 format for consistency
     })
-
 
 
 def load_messages_from_firebase():
@@ -117,11 +114,14 @@ def handle_send_message(data):
     username = data.get('username', '').strip()
     message = data.get('message', '').strip()
     if username and message:  # Only process if both fields are valid
+        print(f"Received message from {username}: {message}")  # Debugging log
         save_message_to_firebase(username, message)
         emit('receive_message', {
             'username': username,
             'message': html.escape(message).replace('\n', '<br>')
         }, broadcast=True)
+    else:
+        print("Received empty message")  # Debugging log
 
 
 
