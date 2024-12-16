@@ -45,56 +45,58 @@
     </div>
 
     <script>
-    const socket = io();  // Connect to the Socket.IO server
-    const username = "{{ session['username'] }}";  // Get the current username from Flask session
+const socket = io(); // Connect to the Socket.IO server
+const username = "{{ session['username'] }}"; // Get the current username from Flask session
 
-    // Automatically adjust the height of the textarea based on content
-    document.addEventListener('input', function (event) {
-        if (event.target.tagName === 'TEXTAREA') {
-            event.target.style.height = 'auto';  // Reset height
-            event.target.style.height = (event.target.scrollHeight) + 'px';  // Set new height based on content
-        }
-    });
+// Adjust textarea height automatically
+document.addEventListener("input", (event) => {
+    if (event.target.tagName === "TEXTAREA") {
+        event.target.style.height = "auto"; // Reset height
+        event.target.style.height = `${event.target.scrollHeight}px`; // Adjust height
+    }
+});
 
-
-        // Function to append messages to the chat window
-        function appendMessage(username, message) {
-    const messagesDiv = document.getElementById('messages');
-    const newMessage = document.createElement('div');
-    newMessage.className = 'message-box';
+// Append a single message to the chat window
+function appendMessage(username, message) {
+    if (!username || !message) return; // Skip invalid messages
+    const messagesDiv = document.getElementById("messages");
+    const newMessage = document.createElement("div");
+    newMessage.className = "message-box";
     newMessage.innerHTML = `<strong>${username}:</strong> <span>${message}</span>`;
     messagesDiv.appendChild(newMessage);
-    messagesDiv.scrollTop = messagesDiv.scrollHeight;  // Auto-scroll to the bottom
+    messagesDiv.scrollTop = messagesDiv.scrollHeight; // Auto-scroll to the bottom
 }
 
+// Send message to the server
+document.getElementById("sendButton").addEventListener("click", () => {
+    const messageBox = document.getElementById("messageBox");
+    const message = messageBox.value.trim();
+    if (message) {
+        socket.emit("send_message", { username, message });
+        messageBox.value = ""; // Clear the input box
+    }
+});
 
-        // Send message to the server
-        document.getElementById('sendButton').addEventListener('click', () => {
-            const messageBox = document.getElementById('messageBox');
-            const message = messageBox.value.trim();
-            if (message) {
-                socket.emit('send_message', { username, message });
-                messageBox.value = '';  // Clear the input box
-            }
-        });
+// Listen for incoming messages
+socket.on("receive_message", (data) => {
+    if (data && data.username && data.message) {
+        appendMessage(data.username, data.message);
+    }
+});
 
-        // Listen for incoming messages
-        socket.on('receive_message', (data) => {
-            appendMessage(data.username, data.message);
-        });
-
-        // Listen for the message history from the server
-      socket.on('message_history', (data) => {
-    const messages = data.messages;
-    // Loop through the messages and append them to the chat window
+// Listen for the message history from the server
+socket.on("message_history", (data) => {
+    const messages = data.messages || [];
     messages.forEach((messageData) => {
-        appendMessage(messageData.username, messageData.message);
+        const { username, message } = messageData;
+        if (username && message) {
+            appendMessage(username, message);
+        }
     });
 });
-;
 
-socket.emit('join', { username: username });
-
+// Emit join event once
+socket.emit("join", { username });
 
     </script>
 
