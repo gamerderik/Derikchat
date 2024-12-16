@@ -42,7 +42,10 @@ def load_messages_from_firebase():
     """Load all messages from Firebase."""
     ref = db.reference("messages")
     messages = ref.order_by_child("timestamp").get()
-    return [(msg["username"], msg["message"]) for msg in messages.values()] if messages else []
+    return [
+        {"username": msg.get("username", ""), "message": msg.get("message", "")}
+        for msg in messages.values() if "username" in msg and "message" in msg
+    ] if messages else []
 
 
 # Routes
@@ -108,10 +111,15 @@ def logout():
 @socketio.on('send_message')
 def handle_send_message(data):
     """Handle sending a new message."""
-    username = data['username']
-    message = data['message']
-    save_message_to_firebase(username, message)  # Save to Firebase
-    emit('receive_message', {'username': username, 'message': html.escape(message).replace('\n', '<br>')}, broadcast=True)
+    username = data.get('username', '').strip()
+    message = data.get('message', '').strip()
+    if username and message:  # Only process if both fields are valid
+        save_message_to_firebase(username, message)
+        emit('receive_message', {
+            'username': username,
+            'message': html.escape(message).replace('\n', '<br>')
+        }, broadcast=True)
+
 
 
 @socketio.on('join')
