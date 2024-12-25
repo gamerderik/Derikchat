@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>DerikChat</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/socket.io-client@4.0.1/dist/socket.io.min.js"></script>
 </head>
 <body>
 
@@ -27,7 +28,7 @@
     <hr>
 
     <h2>Messages:</h2>
-    <div class="message-container">
+    <div class="message-container" id="messages">
         {% for message in messages %}
         <div class="message-box">
             <strong>{{ message[0] }}:</strong> <!-- Display username -->
@@ -56,6 +57,18 @@
             event.target.style.height = 'auto';  // Reset height
             event.target.style.height = (event.target.scrollHeight) + 'px';  // Set new height based on content
         }
+    });
+
+    // Connect to the WebSocket server
+    const socket = io.connect("http://localhost:5000");
+
+    // Listen for new messages from the server
+    socket.on('new_message', function(data) {
+        const messagesDiv = document.getElementById('messages');
+        const newMessageDiv = document.createElement('div');
+        newMessageDiv.classList.add('message-box');
+        newMessageDiv.innerHTML = `<strong>${data.username}:</strong> ${data.message}`;
+        messagesDiv.appendChild(newMessageDiv);
     });
 </script>
 
