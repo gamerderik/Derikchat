@@ -1,13 +1,12 @@
 import os
 from flask import Flask, request, render_template, redirect, url_for, session
+from flask_socketio import SocketIO, emit
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime
 
 app = Flask(__name__)
-
-# Secret key for Flask session
 app.secret_key = os.getenv("FLASK_SECRET_KEY", "default-secret-key")
-ADMIN_PASSWORD = "Derik1408"
+socketio = SocketIO(app)
 
 # File paths for storing data
 MESSAGES_FILE = "messages.txt"
@@ -42,7 +41,6 @@ def authenticate_user(username, password):
                 return True
     return False
 
-# Routes
 @app.route("/", methods=["GET", "POST"])
 def home():
     error_message = None  # Initialize error message
@@ -54,16 +52,18 @@ def home():
             if message and message.strip():
                 username = session['username']
                 save_message_to_file(username, message)
+                # Emit message to the clients using SocketIO
+                socketio.emit('new_message', {'username': username, 'message': message}, broadcast=True)
             else:
                 error_message = "Message cannot be blank."
 
-            clear_password = request.form.get("clear_password")
-            if clear_password:
-                if clear_password == ADMIN_PASSWORD:
-                    open(MESSAGES_FILE, "w").close()  # Clear all messages in the text file
-                    return redirect(url_for('home'))
-                else:
-                    error_message = "Incorrect password. Access denied."
+        clear_password = request.form.get("clear_password")
+        if clear_password:
+            if clear_password == ADMIN_PASSWORD:
+                open(MESSAGES_FILE, "w").close()  # Clear all messages in the text file
+                return redirect(url_for('home'))
+            else:
+                error_message = "Incorrect password. Access denied."
 
         messages = load_messages_from_file()
         return render_template("index.html", messages=reversed(messages), error_message=error_message)
@@ -116,6 +116,12 @@ def logout():
     session.pop('username', None)
     return redirect(url_for('login'))
 
+# WebSocket event for new messages
+@socketio.on('connect')
+def on_connect():
+    messages = load_messages_from_file()
+    for msg in messages:
+        emit('new_message', {'username': msg[0], 'message': msg[1]})
+
 if __name__ == "__main__":
-    # Ensures that the app binds to the port Render provides
-    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 10000)))
+    socketio.run(app, host="0.0.0.0", port=int(os.environ.get("PORT", 10000)))
