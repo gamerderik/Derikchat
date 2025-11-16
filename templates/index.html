@@ -3,74 +3,464 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DerikChat</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-    <script src="https://cdn.jsdelivr.net/npm/socket.io-client@4.0.1/dist/socket.io.min.js"></script>
+    <title>DerikChat - Public Chat App</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #4a6fa5;
+            --secondary: #6c757d;
+            --success: #28a745;
+            --danger: #dc3545;
+            --light: #f8f9fa;
+            --dark: #343a40;
+            --border-radius: 12px;
+            --shadow: 0 4px 12px rgba(0,0,0,0.1);
+            --transition: all 0.3s ease;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            flex: 1;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            color: white;
+        }
+
+        header h1 {
+            font-size: 2.8rem;
+            font-weight: 700;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            margin-bottom: 8px;
+        }
+
+        header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .auth-container {
+            background: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+            padding: 40px;
+            max-width: 400px;
+            margin: 40px auto;
+        }
+
+        .chat-container {
+            background: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            height: calc(100vh - 180px);
+            max-height: 800px;
+        }
+
+        .chat-header {
+            background: var(--primary);
+            color: white;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .chat-header h2 {
+            font-size: 1.4rem;
+            font-weight: 600;
+        }
+
+        .user-info {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+
+        .logout-btn {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .logout-btn:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        .messages-area {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            background: #f8f9fa;
+        }
+
+        .message {
+            margin-bottom: 16px;
+            animation: fadeIn 0.4s ease-out;
+        }
+
+        .message-bubble {
+            background: white;
+            padding: 12px 16px;
+            border-radius: 18px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            max-width: 80%;
+            display: inline-block;
+            position: relative;
+            word-wrap: break-word;
+        }
+
+        .message-bubble::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            width: 12px;
+            height: 12px;
+            background: white;
+            border-bottom-right-radius: 50%;
+            box-shadow: 2px 2px 4px rgba(0,0,0,0.05);
+        }
+
+        .message.own .message-bubble::after {
+            right: -6px;
+            border-bottom-right-radius: 0;
+            border-bottom-left-radius: 50%;
+            box-shadow: -2px 2px 4px rgba(0,0,0,0.05);
+        }
+
+        .message.own {
+            text-align: right;
+        }
+
+        .message.own .message-bubble {
+            background: var(--primary);
+            color: white;
+            margin-left: auto;
+        }
+
+        .message.own .message-bubble::after {
+            background: var(--primary);
+        }
+
+        .username {
+            font-weight: 600;
+            font-size: 0.9rem;
+            margin-bottom: 4px;
+            color: var(--primary);
+        }
+
+        .message.own .username {
+            color: #a0c4ff;
+        }
+
+        .timestamp {
+            font-size: 0.7rem;
+            color: #999;
+            margin-top: 4px;
+        }
+
+        .message.own .timestamp {
+            color: #ddd;
+        }
+
+        .input-area {
+            padding: 15px;
+            background: white;
+            border-top: 1px solid #eee;
+            display: flex;
+            gap: 10px;
+        }
+
+        #message-input {
+            flex: 1;
+            padding: 12px 16px;
+            border: 1px solid #ddd;
+            border-radius: 25px;
+            font-size: 1rem;
+            outline: none;
+            transition: var(--transition);
+            resize: none;
+            min-height: 44px;
+            max-height: 120px;
+            overflow-y: auto;
+        }
+
+        #message-input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(74, 111, 165, 0.2);
+        }
+
+        #send-btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: var(--transition);
+            font-size: 1.1rem;
+        }
+
+        #send-btn:hover {
+            background: #3a5a8f;
+            transform: scale(1.05);
+        }
+
+        #send-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .admin-panel {
+            background: #fdfdffd0;
+            border-top: 1px solid #eee;
+            padding: 15px;
+            text-align: center;
+            font-size: 0.9rem;
+        }
+
+        .admin-panel input {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            margin-right: 8px;
+            width: 180px;
+        }
+
+        .admin-panel button {
+            padding: 8px 16px;
+            background: var(--danger);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.85rem;
+        }
+
+        .admin-panel button:hover {
+            background: #c32525;
+        }
+
+        .error-message {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 12px;
+            border-radius: var(--border-radius);
+            margin: 15px 0;
+            text-align: center;
+            font-weight: 500;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: var(--dark);
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid #ddd;
+            border-radius: var(--border-radius);
+            font-size: 1rem;
+            transition: var(--transition);
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(74, 111, 165, 0.2);
+        }
+
+        .btn {
+            background: var(--primary);
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: var(--border-radius);
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            width: 100%;
+        }
+
+        .btn:hover {
+            background: #3a5f9f;
+            transform: translateY(-1px);
+        }
+
+        .link {
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .link:hover {
+            text-decoration: underline;
+        }
+
+        .text-center {
+            text-align: center;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 15px;
+            }
+            
+            header h1 {
+                font-size: 2.2rem;
+            }
+            
+            .chat-container {
+                height: calc(100vh - 140px);
+            }
+            
+            .message-bubble {
+                max-width: 85%;
+            }
+            
+            .input-area {
+                flex-direction: column;
+            }
+            
+            #message-input {
+                border-radius: var(--border-radius);
+            }
+            
+            #send-btn {
+                width: 100%;
+                border-radius: var(--border-radius);
+                height: 48px;
+            }
+        }
+
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 3px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #c1c1c1;
+            border-radius: 3px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #a8a8a8;
+        }
+    </style>
 </head>
 <body>
 
-    <h1>DerikChat</h1>
-    <!-- Logout Button placed at top right -->
-    <a href="{{ url_for('logout') }}">
-        <button class="logout-button">Logout</button>
-    </a>
+<div class="container">
+    <header>
+        <h1><i class="fas fa-comments"></i> DerikChat</h1>
+        <p>Public chat • Real-time • Everyone can see messages</p>
+    </header>
 
-    <h2>Post a Message:</h2>
-    <form method="POST">
-        <textarea name="message" placeholder="Write your message here..." required></textarea><br>
-        <button type="submit">Post Message</button>
-    </form>
+    <!-- Login / Register Forms (shown when not logged in) -->
+    <div id="auth-section">
+        <div class="auth-container">
+            <h2 style="margin-bottom: 25px; color: var(--primary);">Login to Chat</h2>
+            <form id="login-form">
+                <div class="form-group">
+                    <label for="login-username">Username</label>
+                    <input type="text" id="login-username" class="form-control" placeholder="Enter your username" required>
+                </div>
+                <div class="form-group">
+                    <label for="login-password">Password</label>
+                    <input type="password" id="login-password" class="form-control" placeholder="Enter your password" required>
+                </div>
+                <button type="submit" class="btn">Login</button>
+                <p class="text-center" style="margin-top: 20px;">
+                    Don't have an account? <a href="#" id="show-register" class="link">Register here</a>
+                </p>
+            </form>
 
-    {% if error_message %}
-        <p style="color: red;">{{ error_message }}</p>
-    {% endif %}
+            <form id="register-form" style="display: none;">
+                <div class="form-group">
+                    <label for="reg-username">Choose Username</label>
+                    <input type="text" id="reg-username" class="form-control" placeholder="Pick a unique username" required>
+                </div>
+                <div class="form-group">
+                    <label for="reg-password">Choose Password</label>
+                    <input type="password" id="reg-password" class="form-control" placeholder="Create a strong password" required>
+                </div>
+                <button type="submit" class="btn">Create Account</button>
+                <p class="text-center" style="margin-top: 20px;">
+                    Already have an account? <a href="#" id="show-login" class="link">Login here</a>
+                </p>
+            </form>
 
-    <hr>
-
-    <h2>Messages:</h2>
-    <div class="message-container" id="messages">
-        {% for message in messages %}
-        <div class="message-box">
-            <strong>{{ message[0] }}:</strong> <!-- Display username -->
-            {{ message[1] | safe }}
+            <div id="auth-error" class="error-message" style="display: none; margin-top: 15px;"></div>
         </div>
-        {% endfor %}
     </div>
 
-    <div class="admin-form">
-        <h3>Admin - Clear All Messages</h3>
-        <form method="POST" action="{{ url_for('home') }}">
-            <input type="password" name="clear_password" placeholder="Enter admin password" required>
-            <button type="submit">Clear All Messages</button>
-        </form>
-        {% if error_message %}
-            <div class="error-message">
-                {{ error_message }}
+    <!-- Chat Interface (shown when logged in) -->
+    <div id="chat-section" style="display: none;">
+        <div class="chat-container">
+            <div class="chat-header">
+                <div>
+                    <h2><i class="fas fa-globe"></i> Public Room</h2>
+                    <div class="user-info">Logged in as <span id="current-username"></span></div>
+                </div>
+                <button class="logout-btn" id="logout-btn">Logout</button>
             </div>
-        {% endif %}
-    </div>
 
-<script>
-    // Automatically adjust the height of the textarea based on content
-    document.addEventListener('input', function (event) {
-        if (event.target.tagName === 'TEXTAREA') {
-            event.target.style.height = 'auto';  // Reset height
-            event.target.style.height = (event.target.scrollHeight) + 'px';  // Set new height based on content
-        }
-    });
+            <div class="messages-area" id="messages-area">
+                <!-- Messages will be appended here -->
+            </div>
 
-    // Connect to the WebSocket server
-    const socket = io.connect("http://localhost:5000");
+            <div class="input-area">
+                <textarea id="message-input" placeholder="Type your message... (Shift+Enter for new line)"></textarea>
+                <button id="send-btn"><i class="fas fa-paper-plane"></i></button>
+            </div>
 
-    // Listen for new messages from the server
-    socket.on('new_message', function(data) {
-        const messagesDiv = document.getElementById('messages');
-        const newMessageDiv = document.createElement('div');
-        newMessageDiv.classList.add('message-box');
-        newMessageDiv.innerHTML = `<strong>${data.username}:</strong> ${data.message}`;
-        messagesDiv.appendChild(newMessageDiv);
-    });
-</script>
-
-</body>
-</html>
+            <div class="admin-panel">
+                <form id="clear-form" style="display: inline;">
+                   
