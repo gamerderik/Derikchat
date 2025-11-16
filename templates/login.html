@@ -1,3 +1,4 @@
+<DOCUMENT filename="login.html">
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -7,21 +8,59 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
-    <h1>DerikChat</h1>
+    <div class="container">
+        <header>
+            <h1>DerikChat</h1>
+            <p>Login to join the public chat</p>
+        </header>
 
-    <div class="auth-form">
-        <h2>Login</h2>
-        <form method="POST" action="{{ url_for('login') }}">
-            <input type="text" name="username" placeholder="Enter your username" required>
-            <input type="password" name="password" placeholder="Enter your password" required>
-            <button type="submit">Login</button>
-        </form>
-
-        {% if error_message %}
-            <p class="error-message">{{ error_message }}</p> <!-- Display the error message -->
-        {% endif %}
-
-        <p>Don't have an account? <a href="{{ url_for('register') }}">Register here</a></p>
+        <div class="auth-container">
+            <h2 style="color: var(--primary);">Login</h2>
+            <form id="login-form">
+                <div class="form-group">
+                    <label for="login-username">Username</label>
+                    <input type="text" id="login-username" class="form-control" placeholder="Enter your username" required>
+                </div>
+                <div class="form-group">
+                    <label for="login-password">Password</label>
+                    <input type="password" id="login-password" class="form-control" placeholder="Enter your password" required>
+                </div>
+                <button type="submit" class="btn">Login</button>
+                <p class="text-center" style="margin-top: 20px;">
+                    Don't have an account? <a href="{{ url_for('register') }}" class="link">Register here</a>
+                </p>
+            </form>
+            <div id="auth-error" class="error-message" style="display: none; margin-top: 15px;"></div>
+        </div>
     </div>
+
+    <script>
+        document.getElementById('login-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const username = document.getElementById('login-username').value.trim();
+            const password = document.getElementById('login-password').value;
+
+            try {
+                const response = await fetch('/api/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password }),
+                    credentials: 'include'
+                });
+
+                const data = await response.json();
+                if (response.ok) {
+                    window.location.href = '/';
+                } else {
+                    document.getElementById('auth-error').textContent = data.error || 'Login failed';
+                    document.getElementById('auth-error').style.display = 'block';
+                }
+            } catch (err) {
+                document.getElementById('auth-error').textContent = 'Network error';
+                document.getElementById('auth-error').style.display = 'block';
+            }
+        });
+    </script>
 </body>
 </html>
+</DOCUMENT>
