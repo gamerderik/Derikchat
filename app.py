@@ -1,127 +1,146 @@
+<DOCUMENT filename="app.py">
 import os
-from flask import Flask, request, render_template, redirect, url_for, session
+from flask import Flask, request, jsonify, session, render_template, redirect, url_for
 from flask_socketio import SocketIO, emit
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime
+import json
 
 app = Flask(__name__)
-app.secret_key = os.getenv("FLASK_SECRET_KEY", "default-secret-key")
-socketio = SocketIO(app)
+app.secret_key = os.getenv("FLASK_SECRET_KEY", "super-secret-key-change-in-production")
+socketio = SocketIO(app, cors_allowed_origins="*")
 
-# File paths for storing data
-MESSAGES_FILE = "messages.txt"
-USERS_FILE = "users.txt"
+# File paths
+MESSAGES_FILE = "messages.json"
+USERS_FILE = "users.json"
+ADMIN_PASSWORD = "admin123"  # Change this!
 
-# Helper Functions
-def save_message_to_file(username, message):
-    """Save a new message to a text file."""
-    with open(MESSAGES_FILE, "a") as file:
-        file.write(f"{username}|||{message}|||{datetime.now().isoformat()}\n")
-
-def load_messages_from_file():
-    """Load all messages from the text file."""
+# Initialize files
+def init_files():
     if not os.path.exists(MESSAGES_FILE):
-        return []
-    with open(MESSAGES_FILE, "r") as file:
-        return [line.strip().split("|||")[:2] for line in file.readlines()]
-
-def save_user_to_file(username, password):
-    """Save a new user to the text file."""
-    with open(USERS_FILE, "a") as file:
-        file.write(f"{username}|||{generate_password_hash(password)}\n")
-
-def authenticate_user(username, password):
-    """Authenticate a user using the text file."""
+        with open(MESSAGES_FILE, "w") as f:
+            json.dump([], f)
     if not os.path.exists(USERS_FILE):
-        return False
-    with open(USERS_FILE, "r") as file:
-        for line in file:
-            stored_username, stored_password = line.strip().split("|||")
-            if stored_username == username and check_password_hash(stored_password, password):
-                return True
-    return False
+        with open(USERS_FILE, "w") as f:
+            json.dump({}, f)
 
-@app.route("/", methods=["GET", "POST"])
-def home():
-    error_message = None  # Initialize error message
+init_files()
 
+# === Helper Functions ===
+def load_messages():
+    try:
+        with open(MESSAGES_FILE, "r") as f:
+            return json.load(f)
+    except:
+        return []
+
+def save_messages(messages):
+    with open(MESSAGES_FILE, "w") as f:
+        json.dump(messages, f)
+
+def load_users():
+    try:
+        with open(USERS_FILE, "r") as f:
+            return json.load(f)
+    except:
+        return {}
+
+def save_user(username, password_hash):
+    users = load_users()
+    users[username] = password_hash
+    with open(USERS_FILE, "w") as f:
+        json.dump(users, f)
+
+# === Routes ===
+@app.route("/")
+def index():
     if 'username' in session:
-        # User is logged in, show the chat
-        if request.method == "POST":
-            message = request.form.get("message")
-            if message and message.strip():
-                username = session['username']
-                save_message_to_file(username, message)
-                # Emit message to the clients using SocketIO
-                socketio.emit('new_message', {'username': username, 'message': message}, broadcast=True)
-            else:
-                error_message = "Message cannot be blank."
+        return render_template("index.html")
+    return redirect(url_for('index'))
 
-        clear_password = request.form.get("clear_password")
-        if clear_password:
-            if clear_password == ADMIN_PASSWORD:
-                open(MESSAGES_FILE, "w").close()  # Clear all messages in the text file
-                return redirect(url_for('home'))
-            else:
-                error_message = "Incorrect password. Access denied."
+@app.route("/api/login", methods=["POST"])
+def api_login():
+    data = request.get_json()
+    username = data.get("username", "").strip()
+    password = data.get("password", "")
 
-        messages = load_messages_from_file()
-        return render_template("index.html", messages=reversed(messages), error_message=error_message)
+    users = load_users()
+    stored_hash = users.get(username)
 
-    return redirect(url_for('login'))
+    if stored_hash and check_password_hash(stored_hash, password):
+        session['username'] = username
+        return jsonify({"success": True})
+    
+    return jsonify({"error": "Invalid credentials"}), 401
 
-@app.route("/register", methods=["GET", "POST"])
-def register():
-    error_message = None
+@app.route("/api/register", methods=["POST"])
+def api_register():
+    data = request.get_json()
+    username = data.get("username", "").strip()
+    password = data.get("password", "")
 
-    if request.method == "POST":
-        username = request.form.get("username").strip()  # Remove leading/trailing spaces
-        password = request.form.get("password").strip()  # Remove leading/trailing spaces
+    if len(username) < 3 or len(password) < 4:
+        return jsonify({"error": "Username ≥3, Password ≥4 chars"}), 400
 
-        if username and password:
-            if os.path.exists(USERS_FILE):
-                with open(USERS_FILE, "r") as file:
-                    if any(line.split("|||")[0] == username for line in file):
-                        error_message = "Username already taken."
-                        return render_template("register.html", error_message=error_message)
+    users = load_users()
+    if username in users:
+        return jsonify({"error": "Username taken"}), 400
 
-            save_user_to_file(username, password)
-            return redirect(url_for('login'))
-        else:
-            error_message = "Both fields are required."
+    hashed = generate_password_hash(password)
+    save_user(username, hashed)
+    session['username'] = username
+    return jsonify({"success": True})
 
-    return render_template("register.html", error_message=error_message)
-
-@app.route("/login", methods=["GET", "POST"])
-def login():
-    error_message = None
-
-    if request.method == "POST":
-        username = request.form.get("username").strip()  # Remove leading/trailing spaces
-        password = request.form.get("password").strip()  # Remove leading/trailing spaces
-
-        if username and password:
-            if authenticate_user(username, password):
-                session['username'] = username
-                return redirect(url_for('home'))
-            else:
-                error_message = "Invalid username or password."
-        else:
-            error_message = "Both fields are required."
-
-    return render_template("login.html", error_message=error_message)
-
-@app.route("/logout")
-def logout():
+@app.route("/api/logout", methods=["POST"])
+def api_logout():
     session.pop('username', None)
-    return redirect(url_for('login'))
+    return jsonify({"success": True})
 
-# WebSocket event for new messages
+@app.route("/api/check_session")
+def check_session():
+    if 'username' in session:
+        return jsonify({"logged_in": True, "username": session['username']})
+    return jsonify({"logged_in": False})
+
+# === Socket.IO Events ===
 @socketio.on('connect')
-def on_connect():
-    messages = load_messages_from_file()
-    for msg in messages:
-        emit('new_message', {'username': msg[0], 'message': msg[1]})
+def handle_connect():
+    if 'username' not in session:
+        return False
+    messages = load_messages()
+    emit('load_messages', messages)
+
+@socketio.on('send_message')
+def handle_message(data):
+    if 'username' not in session:
+        return
+    
+    message = data.get('message', '').strip()
+    if not message:
+        return
+
+    msg_obj = {
+        "username": session['username'],
+        "message": message.replace('\n', '<br>'),
+        "timestamp": datetime.now().isoformat()
+    }
+
+    messages = load_messages()
+    messages.append(msg_obj)
+    save_messages(messages[-100:])  # Keep last 100
+
+    emit('new_message', msg_obj, broadcast=True)
+
+@socketio.on('clear_messages')
+def handle_clear():
+    if 'username' not in session:
+        return
+    
+    # In real app: check if user is admin
+    messages = []
+    save_messages(messages)
+    emit('messages_cleared', broadcast=True)
 
 if __name__ == "__main__":
-    socketio.run(app, host="0.0.0.0", port=int(os.environ.get("PORT", 10000)))
+    socketio.run(app, host="0.0.0.0", port=int(os.environ.get("PORT", 5000)), debug=True)
+</DOCUMENT>
